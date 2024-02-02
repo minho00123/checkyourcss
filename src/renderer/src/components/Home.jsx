@@ -7,6 +7,13 @@ function Home() {
   });
   const [projectPath, setProjectPath] = useState("");
 
+  async function selectFolder() {
+    const fullPath = await window.electronAPI.openDirectory();
+
+    setProjectPath(fullPath);
+    setMessage({ show: true, text: "Let's Check Your CSS!" });
+  }
+
   function handleDrop(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -39,7 +46,10 @@ function Home() {
           <>
             <p className="text-lg">Drop your project here.</p>
             <p>+</p>
-            <button className="absolute bottom-8 p-3 rounded-xl bg-gray text-lg font-bold hover:bg-black hover:text-white">
+            <button
+              onClick={selectFolder}
+              className="absolute bottom-8 p-3 rounded-xl bg-gray text-lg font-bold hover:bg-black hover:text-white"
+            >
               Load Project
             </button>
           </>
