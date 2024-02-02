@@ -1,12 +1,49 @@
+import { useState } from "react";
+
 function Home() {
+  const [message, setMessage] = useState({
+    show: false,
+    text: null,
+  });
+  const [projectPath, setProjectPath] = useState("");
+
+  function handleDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const items = event.dataTransfer.items;
+
+    if (items.length === 1 && items[0].webkitGetAsEntry().isDirectory) {
+      const fullPath = items[0].getAsFile().path;
+
+      setProjectPath(fullPath);
+      setMessage({ show: true, text: "Let's Check Your CSS!" });
+    }
+  }
+
+  function handleDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   return (
     <main className="flex justify-center items-center flex-col mt-10 h-96">
-      <div className="flex justify-center items-center flex-col relative w-3/5 h-2/3 border rounded-2xl bg-gray-200 text-6xl font-bold">
-        <p className="text-lg">Drop your project here.</p>
-        <p>+</p>
-        <button className="absolute bottom-8 p-3 rounded-xl bg-gray text-lg font-bold hover:bg-black hover:text-white">
-          Load Project
-        </button>
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        className="flex justify-center items-center flex-col relative w-3/5 h-2/3 border rounded-2xl bg-gray-200 text-6xl font-bold"
+      >
+        {message.show ? (
+          <p className="text-4xl">{message.text}</p>
+        ) : (
+          <>
+            <p className="text-lg">Drop your project here.</p>
+            <p>+</p>
+            <button className="absolute bottom-8 p-3 rounded-xl bg-gray text-lg font-bold hover:bg-black hover:text-white">
+              Load Project
+            </button>
+          </>
+        )}
       </div>
       <div className="flex justify-evenly m-3 w-full">
         <div className="flex">
