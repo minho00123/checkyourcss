@@ -114,6 +114,26 @@ function Home() {
     setCssFrameworkType(event.target.value);
   }
 
+  async function handleCheckClick() {
+    if (
+      projectPath &&
+      userSelections &&
+      cssFrameworkType === "utility-first-css"
+    ) {
+      const userCssData =
+        await window.userCssDataAPI.getUserCssDataUtility(projectPath);
+      console.log(userCssData);
+    } else if (
+      projectPath &&
+      userSelections &&
+      cssFrameworkType === "css-in-js"
+    ) {
+      const userCssData =
+        await window.userCssDataAPI.getUserCssDataStyled(projectPath);
+      console.log(userCssData);
+    }
+  }
+
   return (
     <main className="flex justify-center items-center flex-col h-screen">
       <div
@@ -211,7 +231,10 @@ function Home() {
           <label htmlFor="css-in-js">CSS-in-JS</label>
         </form>
       </div>
-      <button className="mt-8 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black">
+      <button
+        onClick={handleCheckClick}
+        className="mt-8 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
+      >
         Check!
       </button>
     </main>

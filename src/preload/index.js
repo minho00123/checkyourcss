@@ -9,6 +9,12 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld("loadProjectAPI", {
       openDirectory: () => ipcRenderer.invoke("open-directory"),
     });
+    contextBridge.exposeInMainWorld("userCssDataAPI", {
+      getUserCssDataUtility: projectPath =>
+        ipcRenderer.invoke("get-utility-first-css-properties", projectPath),
+      getUserCssDataStyled: projectPath =>
+        ipcRenderer.invoke("get-styled-component-css-properties", projectPath),
+    });
   } catch (error) {
     console.error(error);
   }
