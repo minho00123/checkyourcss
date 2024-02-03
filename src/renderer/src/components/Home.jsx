@@ -3,6 +3,10 @@ import { useState, useEffect } from "react";
 function Home() {
   const [fullData, setFullData] = useState(null);
   const [browsers, setBrowsers] = useState(null);
+  const [userSelections, setUserSelections] = useState([
+    { browser: "", version: "" },
+  ]);
+  const [cssFrameworkType, setCssFrameworkType] = useState("");
   const [message, setMessage] = useState({
     show: false,
     text: null,
@@ -95,12 +99,27 @@ function Home() {
     event.stopPropagation();
   }
 
+  function addSelection() {
+    setUserSelections([...userSelections, { browser: "", version: "" }]);
+  }
+
+  function updateSelection(index, browserOrVersion, value) {
+    const updatedSelections = [...userSelections];
+
+    updatedSelections[index][browserOrVersion] = value;
+    setUserSelections(updatedSelections);
+  }
+
+  function handleRadioOnClick(event) {
+    setCssFrameworkType(event.target.value);
+  }
+
   return (
-    <main className="flex justify-center items-center flex-col mt-10 h-96">
+    <main className="flex justify-center items-center flex-col h-screen">
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="flex justify-center items-center flex-col relative w-3/5 h-2/3 border rounded-2xl bg-gray-200 text-6xl font-bold"
+        className="flex mt-10 justify-center items-center flex-col relative w-3/5 h-2/5 border rounded-2xl bg-gray-200 text-6xl font-bold"
       >
         {message.show ? (
           <p className="text-4xl">{message.text}</p>
@@ -118,33 +137,79 @@ function Home() {
         )}
       </div>
       <div className="flex justify-evenly m-3 w-full">
-        <div className="flex">
-          <select
-            name="browsers"
-            id="browsers"
-            className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3"
-          >
-            <option value="Chrome">Chrome</option>
-          </select>
-          <select
-            name="versions"
-            id="versions"
-            className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3 mx-4"
-          >
-            <option value="version">124</option>
-          </select>
-          <button className="px-2 rounded-full bg-gray text-lg font-bold hover:bg-black hover:text-white">
-            +
-          </button>
-        </div>
         <div>
-          <input type="radio" name="cssType" id="utility-first-css" />
+          {userSelections.map((selection, index) => (
+            <div key={index} className="flex mb-3">
+              <select
+                name="browsers"
+                id="browsers"
+                value={selection.browser}
+                onChange={e =>
+                  updateSelection(index, "browser", e.target.value)
+                }
+                className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3"
+              >
+                <option value="">브라우저</option>
+                {browsers &&
+                  Object.keys(browsers).map(browser => (
+                    <option key={browser} value={browser}>
+                      {browser}
+                    </option>
+                  ))}
+              </select>
+              <select
+                name="versions"
+                id="versions"
+                value={selection.browser.version}
+                onChange={e =>
+                  updateSelection(index, "version", e.target.value)
+                }
+                disabled={!selection.browser}
+                className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3 mx-4"
+              >
+                <option value="">버전</option>
+                {selection.browser &&
+                  browsers[selection.browser].version
+                    .slice()
+                    .reverse()
+                    .map(selectedBrowserVersion => (
+                      <option
+                        key={selectedBrowserVersion.version}
+                        value={selectedBrowserVersion.version}
+                      >
+                        {selectedBrowserVersion.version}
+                      </option>
+                    ))}
+              </select>
+              <button
+                onClick={addSelection}
+                className="px-2 rounded-full bg-gray text-lg font-bold hover:bg-black hover:text-white"
+              >
+                +
+              </button>
+            </div>
+          ))}
+        </div>
+        <form>
+          <input
+            type="radio"
+            name="cssType"
+            id="utility-first-css"
+            value="utility-first-css"
+            onClick={handleRadioOnClick}
+          />
           <label htmlFor="utility-first-css" className="pr-4 ">
             Utility-first CSS
           </label>
-          <input type="radio" name="cssType" id="css-in-js" />
+          <input
+            type="radio"
+            name="cssType"
+            id="css-in-js"
+            value="css-in-js"
+            onClick={handleRadioOnClick}
+          />
           <label htmlFor="css-in-js">CSS-in-JS</label>
-        </div>
+        </form>
       </div>
       <button className="mt-8 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black">
         Check!
