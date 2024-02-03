@@ -115,11 +115,11 @@ function Home() {
   }
 
   return (
-    <main className="flex justify-center items-center flex-col mt-10 h-96">
+    <main className="flex justify-center items-center flex-col h-screen">
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="flex justify-center items-center flex-col relative w-3/5 h-2/3 border rounded-2xl bg-gray-200 text-6xl font-bold"
+        className="flex mt-10 justify-center items-center flex-col relative w-3/5 h-2/5 border rounded-2xl bg-gray-200 text-6xl font-bold"
       >
         {message.show ? (
           <p className="text-4xl">{message.text}</p>

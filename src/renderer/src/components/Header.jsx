@@ -2,7 +2,7 @@ import cycImage from "../../../../resources/cyc.png";
 
 function Header() {
   return (
-    <header className="flex justify-center p-8 border-b-2 shadow-md">
+    <header className="fixed top-0 w-full bg-gray z-40 flex justify-center p-8 border-b-2 shadow-md">
       <img
         src={cycImage}
         alt="cyc logo"
