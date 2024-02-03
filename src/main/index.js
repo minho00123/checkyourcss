@@ -42,11 +42,12 @@ app.whenReady().then(() => {
   createWindow();
 
   ipcMain.handle("open-directory", async (event, args) => {
-    const { canceled, filePaths } = await dialog.showOpenDialog({
+    const { filePaths } = await dialog.showOpenDialog({
       properties: ["openDirectory"],
     });
 
     const directoryPath = filePaths[0];
+
     return directoryPath;
   });
 
