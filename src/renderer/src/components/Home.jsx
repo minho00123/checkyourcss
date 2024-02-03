@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 function Home() {
   const [fullData, setFullData] = useState(null);
   const [browsers, setBrowsers] = useState(null);
-  const [selections, setSelections] = useState([{ browser: "", version: "" }]);
-  const [cssType, setCssType] = useState("");
+  const [userSelections, setUserSelections] = useState([
+    { browser: "", version: "" },
+  ]);
+  const [cssFrameworkType, setCssFrameworkType] = useState("");
   const [message, setMessage] = useState({
     show: false,
     text: null,
@@ -98,26 +100,26 @@ function Home() {
   }
 
   function addSelection() {
-    setSelections([...selections, { browser: "", version: "" }]);
+    setUserSelections([...userSelections, { browser: "", version: "" }]);
   }
 
   function updateSelection(index, browserOrVersion, value) {
-    const updatedSelections = [...selections];
+    const updatedSelections = [...userSelections];
 
     updatedSelections[index][browserOrVersion] = value;
-    setSelections(updatedSelections);
+    setUserSelections(updatedSelections);
   }
 
-  function handleRadioOnChange(event) {
-    setCssType(event.target.value);
+  function handleRadioOnClick(event) {
+    setCssFrameworkType(event.target.value);
   }
 
   return (
-    <main className="flex justify-center items-center flex-col h-screen">
+    <main className="flex justify-center items-center flex-col mt-10 h-96">
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="flex mt-10 justify-center items-center flex-col relative w-3/5 h-2/5 border rounded-2xl bg-gray-200 text-6xl font-bold"
+        className="flex justify-center items-center flex-col relative w-3/5 h-2/3 border rounded-2xl bg-gray-200 text-6xl font-bold"
       >
         {message.show ? (
           <p className="text-4xl">{message.text}</p>
@@ -136,7 +138,7 @@ function Home() {
       </div>
       <div className="flex justify-evenly m-3 w-full">
         <div>
-          {selections.map((selection, index) => (
+          {userSelections.map((selection, index) => (
             <div key={index} className="flex mb-3">
               <select
                 name="browsers"
@@ -170,12 +172,12 @@ function Home() {
                   browsers[selection.browser].version
                     .slice()
                     .reverse()
-                    .map(versionObj => (
+                    .map(selectedBrowserVersion => (
                       <option
-                        key={versionObj.version}
-                        value={versionObj.version}
+                        key={selectedBrowserVersion.version}
+                        value={selectedBrowserVersion.version}
                       >
-                        {versionObj.version}
+                        {selectedBrowserVersion.version}
                       </option>
                     ))}
               </select>
@@ -194,7 +196,7 @@ function Home() {
             name="cssType"
             id="utility-first-css"
             value="utility-first-css"
-            onClick={handleRadioOnChange}
+            onClick={handleRadioOnClick}
           />
           <label htmlFor="utility-first-css" className="pr-4 ">
             Utility-first CSS
@@ -204,7 +206,7 @@ function Home() {
             name="cssType"
             id="css-in-js"
             value="css-in-js"
-            onClick={handleRadioOnChange}
+            onClick={handleRadioOnClick}
           />
           <label htmlFor="css-in-js">CSS-in-JS</label>
         </form>
