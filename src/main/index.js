@@ -1,7 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron";
+import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
-import { getDirectory } from "../ipc";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -41,7 +40,16 @@ app.whenReady().then(() => {
   });
 
   createWindow();
-  ipcMain.handle("open-directory", getDirectory);
+
+  ipcMain.handle("open-directory", async (event, args) => {
+    const { filePaths } = await dialog.showOpenDialog({
+      properties: ["openDirectory"],
+    });
+
+    const directoryPath = filePaths[0];
+
+    return directoryPath;
+  });
 
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

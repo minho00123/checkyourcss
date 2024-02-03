@@ -8,7 +8,7 @@ function Home() {
   const [projectPath, setProjectPath] = useState("");
 
   async function selectFolder() {
-    const fullPath = await window.electronAPI.openDirectory();
+    const fullPath = await window.loadProjectAPI.openDirectory();
 
     setProjectPath(fullPath);
     setMessage({ show: true, text: "Let's Check Your CSS!" });
