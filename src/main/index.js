@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import axios from "axios";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -40,6 +41,14 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+
+  ipcMain.handle("get-data", async () => {
+    const response = await axios.get(
+      "https://raw.githubusercontent.com/Fyrd/caniuse/main/fulldata-json/data-2.0.json",
+    );
+
+    return response.data;
+  });
 
   ipcMain.handle("open-directory", async (event, args) => {
     const { filePaths } = await dialog.showOpenDialog({
