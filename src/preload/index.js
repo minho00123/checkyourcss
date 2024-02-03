@@ -1,13 +1,10 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
 
-const api = {};
-
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld("electron", electronAPI);
-    contextBridge.exposeInMainWorld("api", api);
-    contextBridge.exposeInMainWorld("electronAPI", {
+    contextBridge.exposeInMainWorld("loadProjectAPI", {
       openDirectory: () => ipcRenderer.invoke("open-directory"),
     });
   } catch (error) {
@@ -15,5 +12,4 @@ if (process.contextIsolated) {
   }
 } else {
   window.electron = electronAPI;
-  window.api = api;
 }
