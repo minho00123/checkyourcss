@@ -1,7 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
-import { join } from "path";
+import path, { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import axios from "axios";
+import { execSync } from "child_process";
+import { readdirSync, statSync, readFileSync } from "fs";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -58,6 +60,156 @@ app.whenReady().then(() => {
     const directoryPath = filePaths[0];
 
     return directoryPath;
+  });
+
+  ipcMain.handle("get-utility-first-css-properties", (event, args) => {
+    const directoryPath = args;
+
+    execSync("npm install", { cwd: directoryPath });
+    execSync("npm run build", { cwd: directoryPath });
+
+    const buildFolderPath = findBuildFolder(directoryPath);
+    const cssStrings = getBuildCssStrings(buildFolderPath);
+    const projectCssProperties = extractCssProperties(cssStrings);
+
+    return projectCssProperties;
+  });
+
+  function findBuildFolder(directoryPath) {
+    const foldersAndFiles = readdirSync(directoryPath);
+    const buildFolder = foldersAndFiles
+      .filter(entry => ["build", "out", "dist"].includes(entry))
+      .map(folder => path.join(directoryPath, folder))[0];
+
+    return buildFolder;
+  }
+
+  function getBuildCssStrings(buildFolderPath) {
+    const cssFile = [];
+
+    function getCssFile(buildFolderPath) {
+      const files = readdirSync(buildFolderPath);
+
+      files.forEach(file => {
+        const filePath = path.join(buildFolderPath, file);
+        const stats = statSync(filePath);
+
+        if (stats.isFile() && file.endsWith(".css")) {
+          cssFile.push(readFileSync(filePath, { encoding: "utf8" }));
+        } else if (stats.isDirectory()) {
+          getCssFile(filePath);
+        }
+      });
+    }
+
+    getCssFile(buildFolderPath);
+
+    return cssFile[0].split(" }.");
+  }
+
+  function extractCssProperties(cssStrings) {
+    const buildCssStrings = cssStrings[1].split(/[;{}]/);
+    return [
+      ...new Set(
+        buildCssStrings
+          .filter(cssString => cssString.includes(":"))
+          .map(cssString => cssString.slice(0, cssString.indexOf(":")))
+          .filter(
+            property => !property.includes("--tw-") && !property.includes("."),
+          ),
+      ),
+    ];
+  }
+
+  ipcMain.handle("get-styled-component-css-properties", (event, args) => {
+    const directoryPath = args;
+    const info = {};
+
+    function getAllFiles(directoryPath) {
+      const files = readdirSync(directoryPath);
+
+      files.forEach(file => {
+        if (
+          file === "node_modules" ||
+          file.includes(".map") ||
+          file.endsWith(".md") ||
+          file.endsWith(".json")
+        ) {
+          return;
+        }
+
+        const fullPath = path.join(directoryPath, file);
+        const stats = statSync(fullPath);
+
+        if (stats.isFile()) {
+          info[fullPath] = readFileSync(fullPath, { encoding: "utf8" });
+        } else if (stats.isDirectory()) {
+          getAllFiles(fullPath);
+        }
+      });
+    }
+
+    function getAliasAndContentInfo() {
+      const aliasAndContentInfo = [];
+
+      for (const filePath in info) {
+        if (info[filePath].includes("styled-components")) {
+          const fileSplits = info[filePath].split("\n");
+          let index = fileSplits.findIndex(line =>
+            line.includes('from "styled-components";'),
+          );
+
+          const alias = fileSplits[index]
+            .replace(
+              /"styled-components"|;|import|{|}|require|import|const|let|var|=|from/g,
+              "",
+            )
+            .trim();
+
+          aliasAndContentInfo.push({
+            alias,
+            filePath,
+            fileContent: info[filePath],
+          });
+        }
+      }
+
+      return aliasAndContentInfo;
+    }
+
+    function getUserCssStrings(file) {
+      const userCss = [];
+      const cssStrings = file.fileContent.split("\n");
+      let isStart = false;
+
+      cssStrings.forEach(cssString => {
+        if (cssString.includes("import") || cssString.includes("require")) {
+          return;
+        } else if (cssString.includes(file.alias)) {
+          isStart = true;
+        } else if (
+          isStart &&
+          cssString.includes(":") &&
+          cssString.includes(";")
+        ) {
+          userCss.push(cssString.split(":")[0].trim());
+        } else if (cssString.includes("`;")) {
+          isStart = false;
+        }
+      });
+
+      return userCss;
+    }
+
+    getAllFiles(directoryPath);
+
+    const aliasAndContentInfo = getAliasAndContentInfo();
+    const userCss = aliasAndContentInfo.flatMap(file =>
+      getUserCssStrings(file),
+    );
+    const finalCss = [...new Set(userCss)];
+
+    return finalCss;
   });
 
   app.on("activate", function () {
