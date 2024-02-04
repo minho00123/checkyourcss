@@ -65,6 +65,7 @@ app.whenReady().then(() => {
   ipcMain.handle("get-utility-first-css-properties", (event, args) => {
     const directoryPath = args;
 
+    execSync("npm install", { cwd: directoryPath });
     execSync("npm run build", { cwd: directoryPath });
 
     const buildFolderPath = findBuildFolder(directoryPath);
@@ -85,7 +86,8 @@ app.whenReady().then(() => {
 
   function getBuildCssStrings(buildFolderPath) {
     const cssFile = [];
-    function getCSSFile(buildFolderPath) {
+
+    function getCssFile(buildFolderPath) {
       const files = readdirSync(buildFolderPath);
 
       files.forEach(file => {
@@ -95,12 +97,13 @@ app.whenReady().then(() => {
         if (stats.isFile() && file.endsWith(".css")) {
           cssFile.push(readFileSync(filePath, { encoding: "utf8" }));
         } else if (stats.isDirectory()) {
-          getCSSFile(filePath);
+          getCssFile(filePath);
         }
       });
     }
 
-    getCSSFile(buildFolderPath);
+    getCssFile(buildFolderPath);
+
     return cssFile[0].split(" }.");
   }
 

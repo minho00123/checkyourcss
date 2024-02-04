@@ -122,7 +122,6 @@ function Home() {
     ) {
       const userCssData =
         await window.userCssDataAPI.getUserCssDataUtility(projectPath);
-      console.log(userCssData);
     } else if (
       projectPath &&
       userSelections &&
@@ -130,7 +129,6 @@ function Home() {
     ) {
       const userCssData =
         await window.userCssDataAPI.getUserCssDataStyled(projectPath);
-      console.log(userCssData);
     }
   }
 
