@@ -133,6 +133,7 @@ function Home() {
         userSelections.forEach(selection => {
           const stat = browsers[selection.browser].stat;
           const version = selection.version;
+
           result.push({
             property,
             compatibility: fullData.data[property].stats[stat][version],
@@ -143,7 +144,6 @@ function Home() {
           const browserName = convertBrowserName(
             browsers[selection.browser].stat,
           );
-
           const stat =
             bcd.css.properties[property].__compat.support[browserName];
           const isCompatible = Array.isArray(stat)
