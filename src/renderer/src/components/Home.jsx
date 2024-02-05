@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import bcd from "@mdn/browser-compat-data";
 
 function Home() {
   const [fullData, setFullData] = useState(null);
@@ -115,20 +116,65 @@ function Home() {
   }
 
   async function handleCheckClick() {
-    if (
-      projectPath &&
-      userSelections &&
-      cssFrameworkType === "utility-first-css"
-    ) {
-      const userCssData =
-        await window.userCssDataAPI.getUserCssDataUtility(projectPath);
-    } else if (
-      projectPath &&
-      userSelections &&
-      cssFrameworkType === "css-in-js"
-    ) {
-      const userCssData =
-        await window.userCssDataAPI.getUserCssDataStyled(projectPath);
+    if (projectPath && userSelections) {
+      const userCssData = await (cssFrameworkType === "utility-first-css"
+        ? window.userCssDataAPI.getUserCssDataUtility(projectPath)
+        : window.userCssDataAPI.getUserCssDataStyled(projectPath));
+
+      const cssCompatibilityResult = checkCssCompatibility(userCssData);
+    }
+  }
+
+  function checkCssCompatibility(userCssData) {
+    const result = [];
+
+    userCssData.forEach(property => {
+      if (property in fullData.data) {
+        userSelections.forEach(selection => {
+          const stat = browsers[selection.browser].stat;
+          const version = selection.version;
+          result.push({
+            property,
+            compatibility: fullData.data[property].stats[stat][version],
+          });
+        });
+      } else if (property in bcd.css.properties) {
+        userSelections.forEach(selection => {
+          const browserName = convertBrowserName(
+            browsers[selection.browser].stat,
+          );
+
+          const stat =
+            bcd.css.properties[property].__compat.support[browserName];
+          const isCompatible = Array.isArray(stat)
+            ? parseInt(stat[0].version_added) <= selection.version
+            : parseInt(stat.version_added) <= selection.version;
+
+          result.push({
+            property,
+            compatibility: isCompatible ? "y" : "n",
+          });
+        });
+      }
+    });
+
+    return result;
+  }
+
+  function convertBrowserName(browserStat) {
+    switch (browserStat) {
+      case "samsung":
+        return "samsunginternet_android";
+      case "and_chr":
+        return "chrome_android";
+      case "android":
+        return "webview_android";
+      case "ios_saf":
+        return "safari_ios";
+      case "and_ff":
+        return "firefox_android";
+      default:
+        return browserStat;
     }
   }
 
