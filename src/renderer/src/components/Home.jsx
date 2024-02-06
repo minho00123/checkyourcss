@@ -299,6 +299,8 @@ function Home() {
           isPerfect={isAllCompatible}
           cssInfo={cssCompatibilityResult}
           userSelections={userSelections}
+          cssData={fullData}
+          browsers={browsers}
         />
       )}
     </>

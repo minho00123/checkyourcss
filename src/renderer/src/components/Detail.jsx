@@ -1,11 +1,22 @@
 import NotSupport from "./NotSupport";
 import PartialSupport from "./PartialSupport";
 
-function Detail({ cssInfo, isNotSupportCss }) {
+function Detail({
+  cssData,
+  cssInfo,
+  isNotSupportCss,
+  userSelections,
+  browsers,
+}) {
   return (
     <section className="flex justify-center items-center flex-col h-screen mt-10">
       {isNotSupportCss ? (
-        <NotSupport />
+        <NotSupport
+          cssData={cssData}
+          cssProperty={cssInfo}
+          userSelections={userSelections}
+          browsers={browsers}
+        />
       ) : (
         <PartialSupport cssProperty={cssInfo} />
       )}
