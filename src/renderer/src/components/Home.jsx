@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import bcd from "@mdn/browser-compat-data";
+import Result from "./Result";
 
 function Home() {
   const [fullData, setFullData] = useState(null);
@@ -13,6 +14,8 @@ function Home() {
     text: null,
   });
   const [projectPath, setProjectPath] = useState("");
+  const [cssCompatibilityResult, setCssCompatibilityResult] = useState(null);
+  const [isAllCompatible, setIsAllCompatible] = useState(true);
 
   useEffect(() => {
     async function getData() {
@@ -120,8 +123,15 @@ function Home() {
       const userCssData = await (cssFrameworkType === "utility-first-css"
         ? window.userCssDataAPI.getUserCssDataUtility(projectPath)
         : window.userCssDataAPI.getUserCssDataStyled(projectPath));
+      const result = checkCssCompatibility(userCssData);
 
-      const cssCompatibilityResult = checkCssCompatibility(userCssData);
+      setCssCompatibilityResult(checkCssCompatibility(userCssData));
+
+      result.forEach(property => {
+        if (property.compatibility !== "y") {
+          setIsAllCompatible(false);
+        }
+      });
     }
   }
 
@@ -179,109 +189,119 @@ function Home() {
   }
 
   return (
-    <main className="flex justify-center items-center flex-col h-screen">
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        className="flex mt-10 justify-center items-center flex-col relative w-3/5 h-2/5 border rounded-2xl bg-gray-200 text-6xl font-bold"
-      >
-        {message.show ? (
-          <p className="text-4xl">{message.text}</p>
-        ) : (
-          <>
-            <p className="text-lg">Drop your project here.</p>
-            <p>+</p>
-            <button
-              onClick={selectFolder}
-              className="absolute bottom-8 p-3 rounded-xl bg-gray text-lg font-bold hover:bg-black hover:text-white"
-            >
-              Load Project
-            </button>
-          </>
-        )}
-      </div>
-      <div className="flex justify-evenly m-3 w-full">
-        <div>
-          {userSelections.map((selection, index) => (
-            <div key={index} className="flex mb-3">
-              <select
-                name="browsers"
-                id="browsers"
-                value={selection.browser}
-                onChange={e =>
-                  updateSelection(index, "browser", e.target.value)
-                }
-                className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3"
-              >
-                <option value="">브라우저</option>
-                {browsers &&
-                  Object.keys(browsers).map(browser => (
-                    <option key={browser} value={browser}>
-                      {browser}
-                    </option>
-                  ))}
-              </select>
-              <select
-                name="versions"
-                id="versions"
-                value={selection.browser.version}
-                onChange={e =>
-                  updateSelection(index, "version", e.target.value)
-                }
-                disabled={!selection.browser}
-                className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3 mx-4"
-              >
-                <option value="">버전</option>
-                {selection.browser &&
-                  browsers[selection.browser].version
-                    .slice()
-                    .reverse()
-                    .map(selectedBrowserVersion => (
-                      <option
-                        key={selectedBrowserVersion.version}
-                        value={selectedBrowserVersion.version}
-                      >
-                        {selectedBrowserVersion.version}
-                      </option>
-                    ))}
-              </select>
-              <button
-                onClick={addSelection}
-                className="px-2 rounded-full bg-gray text-lg font-bold hover:bg-black hover:text-white"
-              >
-                +
-              </button>
+    <>
+      {!cssCompatibilityResult ? (
+        <main className="flex justify-center items-center flex-col h-screen">
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            className="flex mt-10 justify-center items-center flex-col relative w-3/5 h-2/5 border rounded-2xl bg-gray-200 text-6xl font-bold"
+          >
+            {message.show ? (
+              <p className="text-4xl">{message.text}</p>
+            ) : (
+              <>
+                <p className="text-lg">Drop your project here.</p>
+                <p>+</p>
+                <button
+                  onClick={selectFolder}
+                  className="absolute bottom-8 p-3 rounded-xl bg-gray text-lg font-bold hover:bg-black hover:text-white"
+                >
+                  Load Project
+                </button>
+              </>
+            )}
+          </div>
+          <div className="flex justify-evenly m-3 w-full">
+            <div>
+              {userSelections.map((selection, index) => (
+                <div key={index} className="flex mb-3">
+                  <select
+                    name="browsers"
+                    id="browsers"
+                    value={selection.browser}
+                    onChange={e =>
+                      updateSelection(index, "browser", e.target.value)
+                    }
+                    className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3"
+                  >
+                    <option value="">브라우저</option>
+                    {browsers &&
+                      Object.keys(browsers).map(browser => (
+                        <option key={browser} value={browser}>
+                          {browser}
+                        </option>
+                      ))}
+                  </select>
+                  <select
+                    name="versions"
+                    id="versions"
+                    value={selection.browser.version}
+                    onChange={e =>
+                      updateSelection(index, "version", e.target.value)
+                    }
+                    disabled={!selection.browser}
+                    className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3 mx-4"
+                  >
+                    <option value="">버전</option>
+                    {selection.browser &&
+                      browsers[selection.browser].version
+                        .slice()
+                        .reverse()
+                        .map(selectedBrowserVersion => (
+                          <option
+                            key={selectedBrowserVersion.version}
+                            value={selectedBrowserVersion.version}
+                          >
+                            {selectedBrowserVersion.version}
+                          </option>
+                        ))}
+                  </select>
+                  <button
+                    onClick={addSelection}
+                    className="px-2 rounded-full bg-gray text-lg font-bold hover:bg-black hover:text-white"
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <form>
-          <input
-            type="radio"
-            name="cssType"
-            id="utility-first-css"
-            value="utility-first-css"
-            onClick={handleRadioOnClick}
-          />
-          <label htmlFor="utility-first-css" className="pr-4 ">
-            Utility-first CSS
-          </label>
-          <input
-            type="radio"
-            name="cssType"
-            id="css-in-js"
-            value="css-in-js"
-            onClick={handleRadioOnClick}
-          />
-          <label htmlFor="css-in-js">CSS-in-JS</label>
-        </form>
-      </div>
-      <button
-        onClick={handleCheckClick}
-        className="mt-8 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
-      >
-        Check!
-      </button>
-    </main>
+            <form>
+              <input
+                type="radio"
+                name="cssType"
+                id="utility-first-css"
+                value="utility-first-css"
+                onClick={handleRadioOnClick}
+              />
+              <label htmlFor="utility-first-css" className="pr-4 ">
+                Utility-first CSS
+              </label>
+              <input
+                type="radio"
+                name="cssType"
+                id="css-in-js"
+                value="css-in-js"
+                onClick={handleRadioOnClick}
+              />
+              <label htmlFor="css-in-js">CSS-in-JS</label>
+            </form>
+          </div>
+          <button
+            onClick={handleCheckClick}
+            className="mt-8 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
+          >
+            Check!
+          </button>
+        </main>
+      ) : (
+        <Result
+          isPerfect={isAllCompatible}
+          cssInfo={cssCompatibilityResult}
+          userSelections={userSelections}
+        />
+      )}
+    </>
   );
 }
 
