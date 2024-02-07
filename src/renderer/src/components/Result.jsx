@@ -2,7 +2,7 @@ import { FaCheck } from "react-icons/fa";
 import Detail from "./Detail";
 import { useState } from "react";
 
-function Result({ isPerfect, cssInfo, userSelections }) {
+function Result({ isPerfect, cssInfo, userSelections, browsers, cssData }) {
   const notSupportedProperties = [];
   const partialSupportProperties = [];
   const [isDetailClicked, setIsDetailClicked] = useState(false);
@@ -131,6 +131,9 @@ function Result({ isPerfect, cssInfo, userSelections }) {
             <Detail
               cssInfo={clickedValue}
               isNotSupportCss={isClickNotSupportCss}
+              browsers={browsers}
+              userSelections={userSelections}
+              cssData={cssData}
             />
           )}
         </>
