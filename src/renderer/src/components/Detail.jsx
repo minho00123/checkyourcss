@@ -11,7 +11,12 @@ function Detail({
   return (
     <section className="flex justify-center items-center flex-col h-screen mt-10">
       {isNotSupportCss ? (
-        <NotSupport />
+        <NotSupport
+          cssData={cssData}
+          cssProperty={cssInfo}
+          userSelections={userSelections}
+          browsers={browsers}
+        />
       ) : (
         <PartialSupport
           cssData={cssData}

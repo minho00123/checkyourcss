@@ -2,7 +2,7 @@ import { FaCheck } from "react-icons/fa";
 import Detail from "./Detail";
 import { useState } from "react";
 
-function Result({ isPerfect, cssInfo, userSelections, browsers, cssData }) {
+function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
   const notSupportedProperties = [];
   const partialSupportProperties = [];
   const [isDetailClicked, setIsDetailClicked] = useState(false);
@@ -30,6 +30,13 @@ function Result({ isPerfect, cssInfo, userSelections, browsers, cssData }) {
 
     setIsDetailClicked(true);
   }
+
+  const deduplicatedNotSupportedProperties = [
+    ...new Set(notSupportedProperties),
+  ];
+  const deduplicatedPartialSupportProperties = [
+    ...new Set(partialSupportProperties),
+  ];
 
   return (
     <>
@@ -94,7 +101,7 @@ function Result({ isPerfect, cssInfo, userSelections, browsers, cssData }) {
                 <div className="ml-14 text-xs">Not Supported</div>
                 <div className="flex items-center flex-col mb-3">
                   <form className="flex items-center w-4/5 h-16 border-2 border-red">
-                    {notSupportedProperties.map(property => {
+                    {deduplicatedNotSupportedProperties.map(property => {
                       return (
                         <button
                           key={property}
@@ -111,12 +118,12 @@ function Result({ isPerfect, cssInfo, userSelections, browsers, cssData }) {
                 <div className="ml-14 text-xs">Partial Supported</div>
                 <div className="flex items-center flex-col">
                   <form className="flex items-center w-4/5 h-16 border-2 border-yellow">
-                    {partialSupportProperties.map(property => {
+                    {deduplicatedPartialSupportProperties.map(property => {
                       return (
                         <button
                           key={property}
                           value={property}
-                          className="p-1 h-8 bg-red-200 ml-5"
+                          className="p-1 h-8 bg-yellow-200 ml-5"
                           onClick={handlePropertyClick}
                         >
                           {property}
@@ -129,11 +136,11 @@ function Result({ isPerfect, cssInfo, userSelections, browsers, cssData }) {
             </main>
           ) : (
             <Detail
+              cssData={cssData}
               cssInfo={clickedValue}
               isNotSupportCss={isClickNotSupportCss}
-              browsers={browsers}
               userSelections={userSelections}
-              cssData={cssData}
+              browsers={browsers}
             />
           )}
         </>
