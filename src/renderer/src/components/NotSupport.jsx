@@ -22,7 +22,6 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
 
     if (browserCompatibilityByVersions) {
       for (const version in browserCompatibilityByVersions) {
-        userSelections.forEach(userSelect => {});
         const compatibility = browserCompatibilityByVersions[version];
 
         if (compatibility === "n") {
