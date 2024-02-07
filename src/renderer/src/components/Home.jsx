@@ -225,7 +225,7 @@ function Home() {
                     }
                     className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3"
                   >
-                    <option value="">브라우저</option>
+                    <option value="">Browser</option>
                     {browsers &&
                       Object.keys(browsers).map(browser => (
                         <option key={browser} value={browser}>
@@ -243,7 +243,7 @@ function Home() {
                     disabled={!selection.browser}
                     className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3 mx-4"
                   >
-                    <option value="">버전</option>
+                    <option value="">Version</option>
                     {selection.browser &&
                       browsers[selection.browser].version
                         .slice()
