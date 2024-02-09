@@ -139,8 +139,9 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
               cssData={cssData}
               cssInfo={clickedValue}
               isNotSupportCss={isClickNotSupportCss}
-              userSelections={userSelections}
               browsers={browsers}
+              userSelections={userSelections}
+              setIsDetailClicked={setIsDetailClicked}
             />
           )}
         </>
