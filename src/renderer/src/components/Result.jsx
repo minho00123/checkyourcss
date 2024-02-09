@@ -123,7 +123,7 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
                         <button
                           key={property}
                           value={property}
-                          className="p-1 h-8 bg-red-200 ml-5"
+                          className="p-1 h-8 bg-yellow-200 ml-5"
                           onClick={handlePropertyClick}
                         >
                           {property}
