@@ -2,7 +2,6 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import path, { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import axios from "axios";
-import { execSync } from "child_process";
 import { readdirSync, statSync, readFileSync } from "fs";
 
 function createWindow() {
@@ -62,64 +61,233 @@ app.whenReady().then(() => {
     return directoryPath;
   });
 
-  ipcMain.handle("get-utility-first-css-properties", (event, args) => {
-    const directoryPath = args;
+  async function getTailwindCssData() {
+    try {
+      const response = await axios.get(
+        "https://raw.githubusercontent.com/Devzstudio/tailwind_to_css/main/cheatsheet.ts",
+      );
+      const tailwindCssData = JSON.parse(
+        response.data.slice(
+          response.data.indexOf("["),
+          response.data.lastIndexOf("]") + 1,
+        ),
+      );
 
-    execSync("npm install", { cwd: directoryPath });
-    execSync("npm run build", { cwd: directoryPath });
-
-    const buildFolderPath = findBuildFolder(directoryPath);
-    const cssStrings = getBuildCssStrings(buildFolderPath);
-    const projectCssProperties = extractCssProperties(cssStrings);
-
-    return projectCssProperties;
-  });
-
-  function findBuildFolder(directoryPath) {
-    const foldersAndFiles = readdirSync(directoryPath);
-    const buildFolder = foldersAndFiles
-      .filter(entry => ["build", "out", "dist"].includes(entry))
-      .map(folder => path.join(directoryPath, folder))[0];
-
-    return buildFolder;
+      return tailwindCssData;
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  function getBuildCssStrings(buildFolderPath) {
-    const cssFile = [];
+  function getCssFiles(directoryPath) {
+    const cssFiles = [];
+    const ignoredFiles = [
+      "node_modules",
+      "build",
+      "dist",
+      "out",
+      ".DS_Store",
+      ".map",
+      ".md",
+      ".json",
+      ".png",
+      ".jpeg",
+      ".jpg",
+      ".gif",
+    ];
 
-    function getCssFile(buildFolderPath) {
-      const files = readdirSync(buildFolderPath);
+    function traverseDirectory(currentPath) {
+      const entries = readdirSync(currentPath);
 
-      files.forEach(file => {
-        const filePath = path.join(buildFolderPath, file);
-        const stats = statSync(filePath);
+      entries.forEach(entry => {
+        if (ignoredFiles.includes(entry)) {
+          return;
+        }
 
-        if (stats.isFile() && file.endsWith(".css")) {
-          cssFile.push(readFileSync(filePath, { encoding: "utf8" }));
-        } else if (stats.isDirectory()) {
-          getCssFile(filePath);
+        const entryPath = path.join(currentPath, entry);
+        const stats = statSync(entryPath);
+
+        if (stats.isDirectory()) {
+          traverseDirectory(entryPath);
+        } else if (stats.isFile()) {
+          const fileContents = readFileSync(entryPath, { encoding: "utf8" });
+
+          if (
+            fileContents.includes("className") ||
+            fileContents.includes("class")
+          ) {
+            cssFiles.push({ path: entryPath, content: fileContents });
+          }
         }
       });
     }
 
-    getCssFile(buildFolderPath);
+    traverseDirectory(directoryPath);
 
-    return cssFile[0].split(" }.");
+    return cssFiles;
   }
 
-  function extractCssProperties(cssStrings) {
-    const buildCssStrings = cssStrings[1].split(/[;{}]/);
-    return [
-      ...new Set(
-        buildCssStrings
-          .filter(cssString => cssString.includes(":"))
-          .map(cssString => cssString.slice(0, cssString.indexOf(":")))
-          .filter(
-            property => !property.includes("--tw-") && !property.includes("."),
-          ),
-      ),
-    ];
+  function getClassContent(content) {
+    if (content.includes("className")) {
+      return content.slice(content.indexOf("className"));
+    } else if (content.includes("class")) {
+      return content.slice(content.indexOf("class"));
+    }
+
+    return "";
   }
+
+  function extractClasses(classContent) {
+    const classes = [];
+    const quoteType = classContent.includes('"') ? '"' : "'";
+    const startIndex = classContent.indexOf(quoteType);
+    const endIndex = classContent.lastIndexOf(quoteType);
+
+    if (startIndex !== -1 && endIndex !== -1) {
+      const classNames = classContent
+        .slice(startIndex + 1, endIndex)
+        .split(" ");
+      classes.push(...classNames);
+    }
+
+    return classes;
+  }
+
+  function getTailwindCssClasses(cssFiles) {
+    const tailwindCssClasses = [];
+
+    cssFiles.forEach(file => {
+      const fileContent = file.content.replace(/\n/g, "").match(/<([^>]*)>/g);
+
+      fileContent.forEach(content => {
+        const classContent = getClassContent(content);
+        const classes = extractClasses(classContent);
+
+        tailwindCssClasses.push(...classes);
+      });
+    });
+
+    return [...new Set(tailwindCssClasses)];
+  }
+
+  function compareCssClasses(tailwindCssData, cssClass) {
+    const cssProperties = [];
+
+    tailwindCssData.forEach(element => {
+      element.content.forEach(content => {
+        content.table.forEach(list => {
+          const regex = /--(.*?)-/g;
+
+          if (cssClass.includes(list[0])) {
+            const properties = list[1].split("\n");
+
+            for (let i = 0; i < properties.length; i++) {
+              const property = properties[i].split(":")[0];
+
+              if (!regex.test(property)) {
+                cssProperties.push(property);
+              }
+            }
+          } else if (cssClass.includes(list[1])) {
+            const properties = list[2].split("\n");
+
+            for (let i = 0; i < properties.length; i++) {
+              const property = properties[i].split(":")[0];
+
+              if (!regex.test(property)) {
+                cssProperties.push(property);
+              }
+            }
+          }
+        });
+      });
+    });
+
+    return [...cssProperties];
+  }
+
+  function getHoverClass(cssClass) {
+    return cssClass
+      .replaceAll("\n", " ")
+      .split(" ")
+      .filter(i => i.startsWith("hover:"))
+      .map(i => i.replace("hover:", ""));
+  }
+
+  function getCssProperties(tailwindCssData, tailwindCssClasses) {
+    const cssProperties = [];
+    const exceptionalSupportedTailwindCssClasses = {
+      pt: "padding-top",
+      pb: "padding-bottom",
+      pl: "padding-left",
+      pr: "padding-right",
+      p: "padding",
+      mb: "margin-bottom",
+      m: "margin",
+      mt: "margin-top",
+      ml: "margin-left",
+      mr: "margin-right",
+      w: "width",
+      h: "height",
+      top: "top",
+      bottom: "bottom",
+      left: "left",
+      right: "right",
+      bg: "background",
+      border: "border-color",
+      text: "color",
+      aspect: "aspect-ratio",
+      color: "color",
+      "max-w": "max-width",
+      "max-h": "max-height",
+    };
+
+    tailwindCssClasses.forEach(cssClass => {
+      cssProperties.push(...compareCssClasses(tailwindCssData, cssClass));
+      if (cssClass.includes("hover")) {
+        const hoverClass = getHoverClass(cssClass);
+
+        cssProperties.push(
+          ...compareCssClasses(tailwindCssData, hoverClass[0]),
+        );
+      }
+    });
+
+    const exceptionalClasses = tailwindCssClasses.filter(className =>
+      className.includes("["),
+    );
+
+    if (exceptionalClasses) {
+      exceptionalClasses.forEach(className => {
+        const property = className.split("-[")[0].replace(".", "");
+
+        if (exceptionalSupportedTailwindCssClasses[property]) {
+          cssProperties.push(exceptionalSupportedTailwindCssClasses[property]);
+        }
+      });
+    }
+
+    return [...new Set(cssProperties)];
+  }
+
+  ipcMain.handle(
+    "get-tailwind-css-properties",
+    async (event, directoryPath) => {
+      try {
+        const tailwindCssData = await getTailwindCssData();
+        const cssFiles = getCssFiles(directoryPath);
+        const tailwindCssClasses = getTailwindCssClasses(cssFiles);
+        const cssProperties = getCssProperties(
+          tailwindCssData,
+          tailwindCssClasses,
+        );
+
+        return cssProperties;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  );
 
   ipcMain.handle("get-styled-component-css-properties", (event, args) => {
     const directoryPath = args;
