@@ -7,9 +7,15 @@ function Detail({
   isNotSupportCss,
   userSelections,
   browsers,
+  setIsDetailClicked,
 }) {
+  function handleGoBackClick() {
+    setIsDetailClicked(false);
+  }
+
   return (
     <section className="flex justify-center items-center flex-col h-screen mt-10">
+      <button onClick={handleGoBackClick}>go back</button>
       {isNotSupportCss ? (
         <NotSupport
           cssData={cssData}

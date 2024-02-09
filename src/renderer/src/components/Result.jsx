@@ -141,6 +141,7 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
               isNotSupportCss={isClickNotSupportCss}
               browsers={browsers}
               userSelections={userSelections}
+              setIsDetailClicked={setIsDetailClicked}
             />
           )}
         </>
