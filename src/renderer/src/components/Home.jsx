@@ -119,9 +119,9 @@ function Home() {
   }
 
   async function handleCheckClick() {
-    if (projectPath && userSelections) {
+    if (projectPath && userSelections && cssFrameworkType) {
       const userCssData = await (cssFrameworkType === "utility-first-css"
-        ? window.userCssDataAPI.getUserCssDataUtility(projectPath)
+        ? window.userCssDataAPI.getUserTailwindCssData(projectPath)
         : window.userCssDataAPI.getUserCssDataStyled(projectPath));
       const result = checkCssCompatibility(userCssData);
 
