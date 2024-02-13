@@ -37,7 +37,7 @@ function PartialSupport({ cssProperty, userSelections, cssData, browsers }) {
   });
 
   return (
-    <>
+    <div className="flex flex-col justify-center items-center">
       <h3 className="text-3xl font-bold">
         <span className="text-yellow">font-attachment</span> is partially
         supported.
@@ -47,7 +47,7 @@ function PartialSupport({ cssProperty, userSelections, cssData, browsers }) {
         <div className="flex justify-evenly items-center flex-col w-full mt-10">
           <div className="w-full">
             {userSelections.map((selection, index) => (
-              <div key={index} className="flex justify-around w-full">
+              <div key={index} className="flex justify-around w-full mb-10">
                 <div className="mx-3">
                   <h4 className="text-2xl font-extrabold">
                     {selection.browser}
@@ -108,7 +108,7 @@ function PartialSupport({ cssProperty, userSelections, cssData, browsers }) {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

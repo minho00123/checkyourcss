@@ -79,16 +79,19 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
   }
 
   return (
-    <div className="flex justify-evenly items-center flex-col mt-10 bg-red-5 w-4/5 h-80 scroll-auto">
-      <h3 className="font-bold">
-        <span className="text-red">text-box-trim</span> on{" "}
-        <span className="underline">line 13</span> is not supported.
+    <div className="flex flex-col justify-center items-center mb-10">
+      <h3 className="text-3xl font-bold">
+        <span className="text-red font-bold">text-box-trim</span> is not
+        supported.
       </h3>
       <div>
-        <div className="flex">
-          <div className="flex flex-col">
+        <div>
+          <div className="flex justify-center items-center mb-10">
             {userSelections.map((selection, index) => (
-              <div key={index} className="flex justify-end w-full mt-10">
+              <div
+                key={index}
+                className="flex justify-center items-center w-full mt-10"
+              >
                 <div className="mx-3">
                   <h4 className="text-2xl font-extrabold">
                     {selection.browser}
@@ -125,7 +128,7 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
                     )}
                     {browsers[selection.browser].versionsSupport.length !==
                       0 && (
-                      <div className="flex justify-center items-center h-12 mt-3 bg-green text-xl text-white">
+                      <div className="flex flex-col justify-center items-center h-12 mt-3 bg-green text-xl text-white">
                         {browsers[selection.browser].versionsSupport[0]} -{" "}
                         {
                           browsers[selection.browser].versionsSupport[
@@ -140,7 +143,7 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
               </div>
             ))}
           </div>
-          <div className="mx-10 my-2 p-4 h-auto bg-red-200">
+          <div className="flex flex-col">
             <p>style.css in /User/Desktop/project</p>
           </div>
         </div>
