@@ -9,10 +9,7 @@ function Home() {
     { browser: "", version: "" },
   ]);
   const [cssFrameworkType, setCssFrameworkType] = useState("");
-  const [message, setMessage] = useState({
-    show: false,
-    text: null,
-  });
+  const [message, setMessage] = useState(null);
   const [projectPath, setProjectPath] = useState("");
   const [cssCompatibilityResult, setCssCompatibilityResult] = useState(null);
   const [isAllCompatible, setIsAllCompatible] = useState(true);
@@ -81,7 +78,10 @@ function Home() {
     const fullPath = await window.loadProjectAPI.openDirectory();
 
     setProjectPath(fullPath);
-    setMessage({ show: true, text: "Let's Check Your CSS!" });
+
+    if (fullPath) {
+      setMessage("Let's Check Your CSS!");
+    }
   }
 
   function handleDrop(event) {
@@ -94,7 +94,7 @@ function Home() {
       const fullPath = items[0].getAsFile().path;
 
       setProjectPath(fullPath);
-      setMessage({ show: true, text: "Let's Check Your CSS!" });
+      setMessage("Let's Check Your CSS!");
     }
   }
 
@@ -119,9 +119,9 @@ function Home() {
   }
 
   async function handleCheckClick() {
-    if (projectPath && userSelections && cssFrameworkType) {
-      const userCssData = await (cssFrameworkType === "tailwindCss"
-        ? window.userCssDataAPI.getUserTailwindCssData(projectPath)
+    if (projectPath && userSelections) {
+      const userCssData = await (cssFrameworkType === "utility-first-css"
+        ? window.userCssDataAPI.getUserCssDataUtility(projectPath)
         : window.userCssDataAPI.getUserCssDataStyled(projectPath));
       const result = checkCssCompatibility(userCssData);
 
@@ -197,8 +197,8 @@ function Home() {
             onDragOver={handleDragOver}
             className="flex mt-10 justify-center items-center flex-col relative w-3/5 h-2/5 border rounded-2xl bg-gray-200 text-6xl font-bold"
           >
-            {message.show ? (
-              <p className="text-4xl">{message.text}</p>
+            {message ? (
+              <p className="text-4xl">{message}</p>
             ) : (
               <>
                 <p className="text-lg">Drop your project here.</p>
@@ -212,7 +212,7 @@ function Home() {
               </>
             )}
           </div>
-          <div className="flex justify-evenly m-3 w-full">
+          <div className="flex justify-evenly overflow-auto max-h-48 m-3 w-full">
             <div>
               {userSelections.map((selection, index) => (
                 <div key={index} className="flex mb-3">
@@ -223,7 +223,7 @@ function Home() {
                     onChange={e =>
                       updateSelection(index, "browser", e.target.value)
                     }
-                    className="bg-gray text-sm rounded-lg focus:ring-blue focus:border-blue-500 block py-1 px-3"
+                    className="bg-gray text-sm rounded-lg py-1 px-3"
                   >
                     <option value="">Browser</option>
                     {browsers &&
@@ -270,12 +270,12 @@ function Home() {
               <input
                 type="radio"
                 name="cssType"
-                id="tailwindCss"
-                value="tailwindCss"
+                id="utility-first-css"
+                value="utility-first-css"
                 onClick={handleRadioOnClick}
               />
-              <label htmlFor="tailwindCss" className="pr-4 ">
-                Tailwind CSS
+              <label htmlFor="utility-first-css" className="pr-4 ">
+                Utility-first CSS
               </label>
               <input
                 type="radio"
@@ -284,7 +284,7 @@ function Home() {
                 value="css-in-js"
                 onClick={handleRadioOnClick}
               />
-              <label htmlFor="css-in-js">styled-components</label>
+              <label htmlFor="css-in-js">CSS-in-JS</label>
             </form>
           </div>
           <button
