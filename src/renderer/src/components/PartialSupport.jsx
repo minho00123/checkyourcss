@@ -1,4 +1,10 @@
-function PartialSupport({ cssProperty, userSelections, cssData, browsers }) {
+function PartialSupport({
+  cssProperty,
+  userSelections,
+  cssData,
+  browsers,
+  cssInfo,
+}) {
   userSelections.forEach(userSelect => {
     const browser = userSelect.browser;
 
@@ -36,14 +42,137 @@ function PartialSupport({ cssProperty, userSelections, cssData, browsers }) {
     browsers[browser].versionsSupport.sort((a, b) => a - b);
   });
 
+  const propertyInfo = [];
+
+  if (cssInfo.cssProperties) {
+    cssInfo.forEach(info => {
+      if (info.fileContent.includes(cssProperty)) {
+        const fileContent = info.fileContent.split("\n");
+        const lineInfo = {
+          path: info.filePath,
+          lines: [],
+          contents: fileContent,
+        };
+
+        for (let i = 0; i < fileContent.length; i++) {
+          if (fileContent[i].includes(cssProperty)) {
+            lineInfo.lines.push(i);
+          }
+        }
+
+        propertyInfo.push(lineInfo);
+      }
+    });
+  } else {
+    const tailwindCssClasses = [];
+
+    cssInfo.forEach(info => {
+      if (Object.keys(info.cssMatching).includes(cssProperty)) {
+        tailwindCssClasses.push(...info.cssMatching[cssProperty]);
+      }
+    });
+
+    const uniqueTailwindCssClasses = [...new Set(tailwindCssClasses)];
+
+    cssInfo.forEach(info => {
+      uniqueTailwindCssClasses.forEach(tailwindCssClass => {
+        if (info.content.includes(tailwindCssClass)) {
+          const fileContent = info.content.split("\n");
+          const lineInfo = {
+            tailwindClass: tailwindCssClass,
+            path: info.filePath,
+            lines: [],
+            contents: fileContent,
+          };
+
+          for (let i = 0; i < fileContent.length; i++) {
+            if (fileContent[i].includes(tailwindCssClass)) {
+              lineInfo.lines.push(i);
+            }
+          }
+
+          propertyInfo.push(lineInfo);
+        }
+      });
+    });
+  }
+
   return (
     <div className="flex flex-col justify-center items-center">
       <h3 className="text-3xl font-bold">
-        <span className="text-yellow">font-attachment</span> is partially
+        <span className="text-yellow">{cssProperty}</span> is partially
         supported.
       </h3>
       <div className="flex flex-col w-5/6 mt-10">
-        <div className="mx-5 my-2 p-4 h-auto bg-yellow-200"></div>
+        <div className="mx-5 my-2 p-4 h-auto bg-yellow-200">
+          {propertyInfo.map(info => {
+            return (
+              <>
+                <p className="font-bold">{info.path}</p>
+                <p>
+                  {info.lines.map((line, index) => {
+                    if (index === 0) {
+                      return (
+                        <>
+                          <span>{`line ${line + 1}, `}</span>
+                          <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                            {`${line + 1} ${info.contents[line]}`}
+                          </pre>
+                        </>
+                      );
+                    } else if (info.lines.length - 1 === index) {
+                      return (
+                        <>
+                          <span>{`${line + 1}`}</span>
+                          <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                            {`${line + 1} ${info.contents[line]}`}
+                          </pre>
+                        </>
+                      );
+                    } else {
+                      return (
+                        <>
+                          <span>{`${line + 1}, `}</span>
+                          <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                            {`${line + 1} ${info.contents[line]}`}
+                          </pre>
+                        </>
+                      );
+                    }
+                  })}
+                </p>
+              </>
+            );
+          })}
+        </div>
+        <div className="mx-5 my-2 p-4 h-auto bg-yellow-200">
+          {propertyInfo.map(info => {
+            return (
+              <>
+                <p className="font-bold">{info.path}</p>
+                <p>
+                  {" "}
+                  {info.lines.map((line, index) => {
+                    if (index === 0) {
+                      return <span>{`line ${line + 1}, `}</span>;
+                    } else if (info.lines.length - 1 === index) {
+                      return <span>{`${line + 1}`}</span>;
+                    } else {
+                      return <span>{`${line + 1}, `}</span>;
+                    }
+                  })}
+                </p>
+                {info.lines.map(number => {
+                  return (
+                    <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                      {`${number + 1} ${info.contents[number]}`}
+                    </pre>
+                  );
+                })}
+              </>
+            );
+          })}
+        </div>
         <div className="flex justify-evenly items-center flex-col w-full mt-10">
           <div className="w-full">
             {userSelections.map((selection, index) => (

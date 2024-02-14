@@ -1,6 +1,12 @@
 import bcd from "@mdn/browser-compat-data";
 
-function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
+function NotSupport({
+  cssData,
+  cssProperty,
+  userSelections,
+  browsers,
+  cssInfo,
+}) {
   let browserCompatibilityByVersions;
   let propertyAddedVersion;
 
@@ -37,7 +43,7 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
       browsers[userSelect.browser].versionsPartiallySupport.sort(
         (a, b) => a - b,
       );
-      browsers[userSelectbrowser].versionsSupport.sort((a, b) => a - b);
+      browsers[userSelect.browser].versionsSupport.sort((a, b) => a - b);
     } else if (propertyAddedVersion) {
       browsers[userSelect.browser].version.forEach(versionInfo => {
         if (Number(versionInfo.version) < Number(propertyAddedVersion)) {
@@ -78,10 +84,65 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
     }
   }
 
+  const propertyInfo = [];
+
+  if (cssInfo.cssProperties) {
+    cssInfo.forEach(info => {
+      if (info.fileContent.includes(cssProperty)) {
+        const fileContent = info.fileContent.split("\n");
+        const lineInfo = {
+          path: info.filePath,
+          lines: [],
+          contents: fileContent,
+        };
+
+        for (let i = 0; i < fileContent.length; i++) {
+          if (fileContent[i].includes(cssProperty)) {
+            lineInfo.lines.push(i);
+          }
+        }
+
+        propertyInfo.push(lineInfo);
+      }
+    });
+  } else {
+    const tailwindCssClasses = [];
+
+    cssInfo.forEach(info => {
+      if (Object.keys(info.cssMatching).includes(cssProperty)) {
+        tailwindCssClasses.push(...info.cssMatching[cssProperty]);
+      }
+    });
+
+    const uniqueTailwindCssClasses = [...new Set(tailwindCssClasses)];
+
+    cssInfo.forEach(info => {
+      uniqueTailwindCssClasses.forEach(tailwindCssClass => {
+        if (info.content.includes(tailwindCssClass)) {
+          const fileContent = info.content.split("\n");
+          const lineInfo = {
+            tailwindClass: tailwindCssClass,
+            path: info.filePath,
+            lines: [],
+            contents: fileContent,
+          };
+
+          for (let i = 0; i < fileContent.length; i++) {
+            if (fileContent[i].includes(tailwindCssClass)) {
+              lineInfo.lines.push(i);
+            }
+          }
+
+          propertyInfo.push(lineInfo);
+        }
+      });
+    });
+  }
+
   return (
     <div className="flex flex-col justify-center items-center mb-10">
       <h3 className="text-3xl font-bold">
-        <span className="text-red font-bold">text-box-trim</span> is not
+        <span className="text-red font-bold">{cssProperty}</span> is not
         supported.
       </h3>
       <div>
@@ -144,7 +205,45 @@ function NotSupport({ cssData, cssProperty, userSelections, browsers }) {
             ))}
           </div>
           <div className="flex flex-col">
-            <p>style.css in /User/Desktop/project</p>
+            {propertyInfo.map(info => {
+              return (
+                <div className="mx-10 my-2 p-4 h-auto bg-red-200">
+                  <p className="font-bold">{info.path}</p>
+                  <p>
+                    {info.lines.map((line, index) => {
+                      if (index === 0) {
+                        return (
+                          <>
+                            <span>{`line ${line + 1}, `}</span>
+                            <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                              {`${line + 1} ${info.contents[line]}`}
+                            </pre>
+                          </>
+                        );
+                      } else if (info.lines.length - 1 === index) {
+                        return (
+                          <>
+                            <span>{`${line + 1}`}</span>
+                            <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                              {`${line + 1} ${info.contents[line]}`}
+                            </pre>
+                          </>
+                        );
+                      } else {
+                        return (
+                          <>
+                            <span>{`${line + 1}, `}</span>
+                            <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                              {`${line + 1} ${info.contents[line]}`}
+                            </pre>
+                          </>
+                        );
+                      }
+                    })}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
