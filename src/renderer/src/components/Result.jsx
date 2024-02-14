@@ -42,17 +42,17 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
     <>
       {isPerfect ? (
         <main className="flex justify-center items-center flex-col h-screen">
-          <p className="mb-5">
+          <p className="mb-5 flex">
             CSS Compatibility in your Browser,{" "}
             {userSelections.map((selection, index) => {
               return (
-                <>
+                <div key={index} className="mx-2">
                   <span className="font-bold">{selection.browser} </span>
                   <span className="font-bold">
                     {selection.version}
                     {userSelections.length - 1 === index ? "" : ","}{" "}
                   </span>
-                </>
+                </div>
               );
             })}
             is
@@ -68,7 +68,7 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
         <>
           {!isDetailClicked ? (
             <main className="flex justify-center items-center flex-col h-screen pt-36">
-              <div>
+              <div className="flex">
                 CSS Compatibility in your Browser,{" "}
                 {userSelections.map((selection, index) => {
                   return (
@@ -98,15 +98,15 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
                 </div>
               </div>
               <div className="h-4/5 w-4/5">
-                <div className="ml-14 text-xs">Not Supported</div>
-                <div className="flex items-center flex-col mb-3">
-                  <form className="flex items-center w-4/5 h-16 border-2 border-red">
+                <div className="flex items-center flex-col w-full mb-3">
+                  <div className="text-xs self-start">Not Supported</div>
+                  <form className="flex items-center w-full h-16 border-2 border-red">
                     {deduplicatedNotSupportedProperties.map(property => {
                       return (
                         <button
                           key={property}
                           value={property}
-                          className="p-1 h-8 bg-red-200 ml-5"
+                          className="m-1 p-1 w-auto h-8 bg-red-200 ml-5"
                           onClick={handlePropertyClick}
                         >
                           {property}
@@ -115,15 +115,15 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
                     })}
                   </form>
                 </div>
-                <div className="ml-14 text-xs">Partial Supported</div>
-                <div className="flex items-center flex-col">
-                  <form className="flex items-center w-4/5 h-16 border-2 border-yellow">
+                <div className="flex items-center flex-col w-full">
+                  <div className="text-xs self-start">Partial Supported</div>
+                  <form className="flex items-center w-full h-16 border-2 border-yellow">
                     {deduplicatedPartialSupportProperties.map(property => {
                       return (
                         <button
                           key={property}
                           value={property}
-                          className="p-1 h-8 bg-yellow-200 ml-5"
+                          className="m-1 p-1 w-auto h-8 bg-yellow-200 ml-5"
                           onClick={handlePropertyClick}
                         >
                           {property}
