@@ -120,7 +120,7 @@ function Home() {
 
   async function handleCheckClick() {
     if (projectPath && userSelections && cssFrameworkType) {
-      const userCssData = await (cssFrameworkType === "utility-first-css"
+      const userCssData = await (cssFrameworkType === "tailwindCss"
         ? window.userCssDataAPI.getUserTailwindCssData(projectPath)
         : window.userCssDataAPI.getUserCssDataStyled(projectPath));
       const result = checkCssCompatibility(userCssData);
@@ -270,21 +270,21 @@ function Home() {
               <input
                 type="radio"
                 name="cssType"
-                id="utility-first-css"
-                value="utility-first-css"
+                id="tailwindCss"
+                value="tailwindCss"
                 onClick={handleRadioOnClick}
               />
-              <label htmlFor="utility-first-css" className="pr-4 ">
-                Utility-first CSS
+              <label htmlFor="tailwindCss" className="pr-4 ">
+                Tailwind CSS
               </label>
               <input
                 type="radio"
                 name="cssType"
-                id="css-in-js"
-                value="css-in-js"
+                id="styled-components"
+                value="styled-components"
                 onClick={handleRadioOnClick}
               />
-              <label htmlFor="css-in-js">CSS-in-JS</label>
+              <label htmlFor="styled-components">styled-components</label>
             </form>
           </div>
           <button

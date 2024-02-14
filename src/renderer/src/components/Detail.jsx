@@ -16,7 +16,7 @@ function Detail({
   }
 
   return (
-    <section className="flex justify-center items-center flex-col h-screen mt-10">
+    <section className="flex justify-center items-center flex-col mt-40">
       <button onClick={handleGoBackClick} className="absolute top-40 right-20">
         <FontAwesomeIcon icon={faArrowLeft} className="text-gray-700" />
         <span className="ml-2">Go Back</span>
