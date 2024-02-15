@@ -8,6 +8,7 @@ if (process.contextIsolated) {
     });
     contextBridge.exposeInMainWorld("loadProjectAPI", {
       openDirectory: () => ipcRenderer.invoke("open-directory"),
+      openFiles: propertyInfo => ipcRenderer.invoke("open-files", propertyInfo),
     });
     contextBridge.exposeInMainWorld("userCssDataAPI", {
       getTailwindCssData: projectPath =>

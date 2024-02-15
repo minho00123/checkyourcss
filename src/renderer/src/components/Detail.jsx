@@ -39,9 +39,6 @@ function Detail({
           cssInfo={cssInfo}
         />
       )}
-      <button className="mb-24 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black">
-        Go to Your Code!
-      </button>
     </section>
   );
 }

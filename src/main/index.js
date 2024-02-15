@@ -3,6 +3,7 @@ import path, { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import axios from "axios";
 import { readdirSync, statSync, readFileSync } from "fs";
+import { execSync } from "child_process";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -374,6 +375,20 @@ app.whenReady().then(() => {
       return styledComponentsInfo;
     },
   );
+
+  ipcMain.handle("open-files", (event, propertyInfo) => {
+    const filePaths = [];
+
+    propertyInfo.forEach(info => {
+      filePaths.push(info.path);
+    });
+
+    const openingPaths = [...new Set(filePaths)];
+
+    openingPaths.forEach(path => {
+      execSync(`open ${path}`);
+    });
+  });
 
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
