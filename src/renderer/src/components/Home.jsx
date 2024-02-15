@@ -168,7 +168,7 @@ function Home() {
             typeof selection.version === "string" &&
             selection.version.includes("-")
           ) {
-            const versionRangeToversion = convertToNumberWithOneDecimal(
+            const versionRangeToVersion = convertToNumberWithOneDecimal(
               selection.version,
             );
             const browserName = convertBrowserName(
@@ -177,8 +177,8 @@ function Home() {
             const stat =
               bcd.css.properties[property].__compat.support[browserName];
             const isCompatible = Array.isArray(stat)
-              ? parseInt(stat[0].version_added) <= versionRangeToversion
-              : parseInt(stat.version_added) <= versionRangeToversion;
+              ? parseInt(stat[0].version_added) <= versionRangeToVersion
+              : parseInt(stat.version_added) <= versionRangeToVersion;
 
             result.push({
               property,

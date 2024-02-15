@@ -241,7 +241,7 @@ function PartialSupport({
           </div>
           <button
             onClick={handleGoToYourCodeClick}
-            className="m-12  px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
+            className="m-12 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
           >
             Go to Your Code!
           </button>
