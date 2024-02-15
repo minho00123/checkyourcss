@@ -139,6 +139,10 @@ function NotSupport({
     });
   }
 
+  async function handleGoToYourCodeClick() {
+    await window.loadProjectAPI.openFiles(propertyInfo);
+  }
+
   return (
     <div className="flex flex-col justify-center items-center mb-10">
       <h3 className="text-3xl font-bold">
@@ -146,7 +150,7 @@ function NotSupport({
         supported.
       </h3>
       <div>
-        <div>
+        <div className="flex flex-col justify-center items-center w-full">
           <div className="flex justify-center items-center mb-10">
             {userSelections.map((selection, index) => (
               <div
@@ -245,6 +249,12 @@ function NotSupport({
               );
             })}
           </div>
+          <button
+            onClick={handleGoToYourCodeClick}
+            className="m-12 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
+          >
+            Go to Your Code!
+          </button>
         </div>
       </div>
     </div>

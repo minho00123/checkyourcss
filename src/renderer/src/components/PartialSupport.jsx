@@ -97,6 +97,10 @@ function PartialSupport({
     });
   }
 
+  async function handleGoToYourCodeClick() {
+    await window.loadProjectAPI.openFiles(propertyInfo);
+  }
+
   return (
     <div className="flex flex-col justify-center items-center">
       <h3 className="text-3xl font-bold">
@@ -235,6 +239,12 @@ function PartialSupport({
               </div>
             ))}
           </div>
+          <button
+            onClick={handleGoToYourCodeClick}
+            className="m-12 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black"
+          >
+            Go to Your Code!
+          </button>
         </div>
       </div>
     </div>

@@ -164,19 +164,41 @@ function Home() {
         });
       } else if (property in bcd.css.properties) {
         userSelections.forEach(selection => {
-          const browserName = convertBrowserName(
-            browsers[selection.browser].stat,
-          );
-          const stat =
-            bcd.css.properties[property].__compat.support[browserName];
-          const isCompatible = Array.isArray(stat)
-            ? parseInt(stat[0].version_added) <= selection.version
-            : parseInt(stat.version_added) <= selection.version;
+          if (
+            typeof selection.version === "string" &&
+            selection.version.includes("-")
+          ) {
+            const versionRangeToVersion = convertToNumberWithOneDecimal(
+              selection.version,
+            );
+            const browserName = convertBrowserName(
+              browsers[selection.browser].stat,
+            );
+            const stat =
+              bcd.css.properties[property].__compat.support[browserName];
+            const isCompatible = Array.isArray(stat)
+              ? parseInt(stat[0].version_added) <= versionRangeToVersion
+              : parseInt(stat.version_added) <= versionRangeToVersion;
 
-          result.push({
-            property,
-            compatibility: isCompatible ? "y" : "n",
-          });
+            result.push({
+              property,
+              compatibility: isCompatible ? "y" : "n",
+            });
+          } else {
+            const browserName = convertBrowserName(
+              browsers[selection.browser].stat,
+            );
+            const stat =
+              bcd.css.properties[property].__compat.support[browserName];
+            const isCompatible = Array.isArray(stat)
+              ? parseInt(stat[0].version_added) <= selection.version
+              : parseInt(stat.version_added) <= selection.version;
+
+            result.push({
+              property,
+              compatibility: isCompatible ? "y" : "n",
+            });
+          }
         });
       }
     });
