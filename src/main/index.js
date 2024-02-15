@@ -126,7 +126,7 @@ app.whenReady().then(() => {
   }
 
   function extractClasses(classContent) {
-    const classes = [];
+    const tailwindCssClasses = [];
     const quoteType = classContent.includes('"') ? '"' : "'";
     const startIndex = classContent.indexOf(quoteType);
     const endIndex = classContent.lastIndexOf(quoteType);
@@ -134,10 +134,10 @@ app.whenReady().then(() => {
       const classNames = classContent
         .slice(startIndex + 1, endIndex)
         .split(" ");
-      classes.push(...classNames);
+      tailwindCssClasses.push(...classNames);
     }
 
-    return classes;
+    return tailwindCssClasses;
   }
 
   function getTailwindCssClasses(files) {
@@ -155,9 +155,9 @@ app.whenReady().then(() => {
 
         fileContent.forEach(content => {
           const classContent = getClassContent(content);
-          const classes = extractClasses(classContent);
+          const tailwindCssClasses = extractClasses(classContent);
 
-          tailwindClasses.push(...classes);
+          tailwindClasses.push(...tailwindCssClasses);
         });
 
         tailwindCssInfo.push({
@@ -317,7 +317,7 @@ app.whenReady().then(() => {
     },
   );
 
-  function getAlias(files) {
+  function getStyledComponentsAlias(files) {
     const styledComponentsInfo = [];
 
     for (const filePath in files) {
@@ -368,7 +368,7 @@ app.whenReady().then(() => {
     "get-styled-components-css-properties",
     (event, directoryPath) => {
       const files = getFiles(directoryPath);
-      const styledComponentsInfo = getAlias(files);
+      const styledComponentsInfo = getStyledComponentsAlias(files);
       getUserCss(styledComponentsInfo);
 
       return styledComponentsInfo;
