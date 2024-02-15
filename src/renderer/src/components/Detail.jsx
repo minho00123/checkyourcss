@@ -5,11 +5,12 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 function Detail({
   cssData,
-  cssInfo,
+  clickedValue,
   isNotSupportCss,
-  userSelections,
   browsers,
+  userSelections,
   setIsDetailClicked,
+  cssInfo,
 }) {
   function handleGoBackClick() {
     setIsDetailClicked(false);
@@ -24,16 +25,18 @@ function Detail({
       {isNotSupportCss ? (
         <NotSupport
           cssData={cssData}
-          cssProperty={cssInfo}
+          cssProperty={clickedValue}
           userSelections={userSelections}
           browsers={browsers}
+          cssInfo={cssInfo}
         />
       ) : (
         <PartialSupport
           cssData={cssData}
-          cssProperty={cssInfo}
+          cssProperty={clickedValue}
           userSelections={userSelections}
           browsers={browsers}
+          cssInfo={cssInfo}
         />
       )}
       <button className="mb-24 px-6 py-2 rounded-xl bg-black text-lg text-white font-bold hover:bg-gray hover:text-black">

@@ -10,10 +10,10 @@ if (process.contextIsolated) {
       openDirectory: () => ipcRenderer.invoke("open-directory"),
     });
     contextBridge.exposeInMainWorld("userCssDataAPI", {
-      getUserTailwindCssData: projectPath =>
+      getTailwindCssData: projectPath =>
         ipcRenderer.invoke("get-tailwind-css-properties", projectPath),
-      getUserCssDataStyled: projectPath =>
-        ipcRenderer.invoke("get-styled-component-css-properties", projectPath),
+      getStyledComponentsData: projectPath =>
+        ipcRenderer.invoke("get-styled-components-css-properties", projectPath),
     });
   } catch (error) {
     console.error(error);

@@ -13,6 +13,7 @@ function Home() {
   const [projectPath, setProjectPath] = useState("");
   const [cssCompatibilityResult, setCssCompatibilityResult] = useState(null);
   const [isAllCompatible, setIsAllCompatible] = useState(true);
+  const [cssInfo, setCssInfo] = useState(null);
 
   useEffect(() => {
     async function getData() {
@@ -121,11 +122,12 @@ function Home() {
   async function handleCheckClick() {
     if (projectPath && userSelections && cssFrameworkType) {
       const userCssData = await (cssFrameworkType === "tailwindCss"
-        ? window.userCssDataAPI.getUserTailwindCssData(projectPath)
-        : window.userCssDataAPI.getUserCssDataStyled(projectPath));
-      const result = checkCssCompatibility(userCssData);
+        ? window.userCssDataAPI.getTailwindCssData(projectPath)
+        : window.userCssDataAPI.getStyledComponentsData(projectPath));
 
-      setCssCompatibilityResult(checkCssCompatibility(userCssData));
+      const result = checkCssCompatibility(userCssData);
+      setCssInfo(userCssData);
+      setCssCompatibilityResult(result);
 
       result.forEach(property => {
         if (property.compatibility !== "y") {
@@ -136,9 +138,20 @@ function Home() {
   }
 
   function checkCssCompatibility(userCssData) {
+    const userCss = [];
     const result = [];
 
-    userCssData.forEach(property => {
+    if (userCssData.cssProperties) {
+      userCssData.forEach(data => {
+        userCss.push(...data.cssProperties);
+      });
+    } else {
+      userCssData.forEach(data => {
+        userCss.push(...Object.keys(data.cssMatching));
+      });
+    }
+
+    userCss.forEach(property => {
       if (property in fullData.data) {
         userSelections.forEach(selection => {
           const stat = browsers[selection.browser].stat;
@@ -297,10 +310,11 @@ function Home() {
       ) : (
         <Result
           isPerfect={isAllCompatible}
-          cssInfo={cssCompatibilityResult}
+          cssInfo={cssInfo}
           userSelections={userSelections}
           cssData={fullData}
           browsers={browsers}
+          cssCompatibilityResult={cssCompatibilityResult}
         />
       )}
     </>

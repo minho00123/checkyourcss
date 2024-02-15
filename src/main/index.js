@@ -79,21 +79,16 @@ app.whenReady().then(() => {
     }
   }
 
-  function getCssFiles(directoryPath) {
-    const cssFiles = [];
+  function getFiles(directoryPath) {
+    const files = {};
     const ignoredFiles = [
       "node_modules",
       "build",
       "dist",
       "out",
       ".DS_Store",
-      ".map",
-      ".md",
-      ".json",
-      ".png",
-      ".jpeg",
-      ".jpg",
-      ".gif",
+      "package.json",
+      "package-lock.json",
     ];
 
     function traverseDirectory(currentPath) {
@@ -110,21 +105,14 @@ app.whenReady().then(() => {
         if (stats.isDirectory()) {
           traverseDirectory(entryPath);
         } else if (stats.isFile()) {
-          const fileContents = readFileSync(entryPath, { encoding: "utf8" });
-
-          if (
-            fileContents.includes("className") ||
-            fileContents.includes("class")
-          ) {
-            cssFiles.push({ path: entryPath, content: fileContents });
-          }
+          files[entryPath] = readFileSync(entryPath, { encoding: "utf8" });
         }
       });
     }
 
     traverseDirectory(directoryPath);
 
-    return cssFiles;
+    return files;
   }
 
   function getClassContent(content) {
@@ -138,36 +126,49 @@ app.whenReady().then(() => {
   }
 
   function extractClasses(classContent) {
-    const classes = [];
+    const tailwindCssClasses = [];
     const quoteType = classContent.includes('"') ? '"' : "'";
     const startIndex = classContent.indexOf(quoteType);
     const endIndex = classContent.lastIndexOf(quoteType);
-
     if (startIndex !== -1 && endIndex !== -1) {
       const classNames = classContent
         .slice(startIndex + 1, endIndex)
         .split(" ");
-      classes.push(...classNames);
+      tailwindCssClasses.push(...classNames);
     }
 
-    return classes;
+    return tailwindCssClasses;
   }
 
-  function getTailwindCssClasses(cssFiles) {
-    const tailwindCssClasses = [];
+  function getTailwindCssClasses(files) {
+    const tailwindCssInfo = [];
 
-    cssFiles.forEach(file => {
-      const fileContent = file.content.replace(/\n/g, "").match(/<([^>]*)>/g);
+    for (const filePath in files) {
+      if (
+        files[filePath].includes("className") ||
+        files[filePath].includes("class")
+      ) {
+        const fileContent = files[filePath]
+          .replace(/\n/g, "")
+          .match(/<([^>]*)>/g);
+        const tailwindClasses = [];
 
-      fileContent.forEach(content => {
-        const classContent = getClassContent(content);
-        const classes = extractClasses(classContent);
+        fileContent.forEach(content => {
+          const classContent = getClassContent(content);
+          const tailwindCssClasses = extractClasses(classContent);
 
-        tailwindCssClasses.push(...classes);
-      });
-    });
+          tailwindClasses.push(...tailwindCssClasses);
+        });
 
-    return [...new Set(tailwindCssClasses)];
+        tailwindCssInfo.push({
+          filePath,
+          content: files[filePath],
+          tailwindClasses: [...new Set(tailwindClasses)],
+        });
+      }
+    }
+
+    return tailwindCssInfo;
   }
 
   function compareCssClasses(tailwindCssData, cssClass) {
@@ -214,8 +215,7 @@ app.whenReady().then(() => {
       .map(i => i.replace("hover:", ""));
   }
 
-  function getCssProperties(tailwindCssData, tailwindCssClasses) {
-    const cssProperties = [];
+  function getCssProperties(tailwindCssData, tailwindCssInfo) {
     const exceptionalSupportedTailwindCssClasses = {
       pt: "padding-top",
       pb: "padding-bottom",
@@ -242,143 +242,138 @@ app.whenReady().then(() => {
       "max-h": "max-height",
     };
 
-    tailwindCssClasses.forEach(cssClass => {
-      cssProperties.push(...compareCssClasses(tailwindCssData, cssClass));
-      if (cssClass.includes("hover")) {
-        const hoverClass = getHoverClass(cssClass);
+    tailwindCssInfo.forEach(info => {
+      info.cssMatching = {};
 
-        cssProperties.push(
-          ...compareCssClasses(tailwindCssData, hoverClass[0]),
-        );
-      }
-    });
+      info.tailwindClasses.forEach(tailwindClass => {
+        const cssClasses = [
+          ...new Set(compareCssClasses(tailwindCssData, tailwindClass)),
+        ];
 
-    const exceptionalClasses = tailwindCssClasses.filter(className =>
-      className.includes("["),
-    );
+        cssClasses.forEach(cssClass => {
+          if (Object.keys(info.cssMatching).includes(cssClass)) {
+            info.cssMatching[cssClass].push(tailwindClass);
+          } else {
+            info.cssMatching[cssClass] = [];
+            info.cssMatching[cssClass].push(tailwindClass);
+          }
+        });
 
-    if (exceptionalClasses) {
-      exceptionalClasses.forEach(className => {
-        const property = className.split("-[")[0].replace(".", "");
+        if (tailwindClass.includes("hover")) {
+          const hoverClass = getHoverClass(tailwindClass);
+          const cssClasses = [
+            ...new Set(compareCssClasses(tailwindCssData, hoverClass[0])),
+          ];
 
-        if (exceptionalSupportedTailwindCssClasses[property]) {
-          cssProperties.push(exceptionalSupportedTailwindCssClasses[property]);
+          cssClasses.forEach(cssClass => {
+            if (Object.keys(info.cssMatching).includes(cssClass)) {
+              info.cssMatching[cssClass].push(tailwindClass);
+            } else {
+              info.cssMatching[cssClass] = [];
+              info.cssMatching[cssClass].push(tailwindClass);
+            }
+          });
         }
       });
-    }
 
-    return [...new Set(cssProperties)];
+      const exceptionalClasses = info.tailwindClasses.filter(className =>
+        className.includes("["),
+      );
+
+      if (exceptionalClasses) {
+        exceptionalClasses.forEach(className => {
+          const property = className.split("-[")[0].replace(".", "");
+
+          if (
+            Object.keys(info.cssMatching).includes(
+              exceptionalSupportedTailwindCssClasses[property],
+            )
+          ) {
+            info.cssMatching[
+              exceptionalSupportedTailwindCssClasses[property]
+            ].push(className);
+          } else {
+            info.cssMatching[exceptionalSupportedTailwindCssClasses[property]] =
+              [];
+            info.cssMatching[
+              exceptionalSupportedTailwindCssClasses[property]
+            ].push(className);
+          }
+        });
+      }
+    });
   }
 
   ipcMain.handle(
     "get-tailwind-css-properties",
     async (event, directoryPath) => {
-      try {
-        const tailwindCssData = await getTailwindCssData();
-        const cssFiles = getCssFiles(directoryPath);
-        const tailwindCssClasses = getTailwindCssClasses(cssFiles);
-        const cssProperties = getCssProperties(
-          tailwindCssData,
-          tailwindCssClasses,
-        );
+      const tailwindCssData = await getTailwindCssData();
+      const files = getFiles(directoryPath);
+      const tailwindCssInfo = getTailwindCssClasses(files);
 
-        return cssProperties;
-      } catch (err) {
-        console.error(err);
-      }
+      getCssProperties(tailwindCssData, tailwindCssInfo);
+
+      return tailwindCssInfo;
     },
   );
 
-  ipcMain.handle("get-styled-component-css-properties", (event, args) => {
-    const directoryPath = args;
-    const info = {};
+  function getStyledComponentsAlias(files) {
+    const styledComponentsInfo = [];
 
-    function getAllFiles(directoryPath) {
-      const files = readdirSync(directoryPath);
+    for (const filePath in files) {
+      if (files[filePath].includes("styled-components")) {
+        const fileSplits = files[filePath].split("\n");
+        const regex = /from ['"]styled-components['"];/g;
+        const index = fileSplits.findIndex(line => line.match(regex));
 
-      files.forEach(file => {
-        if (
-          file === "node_modules" ||
-          file.includes(".map") ||
-          file.endsWith(".md") ||
-          file.endsWith(".json")
-        ) {
-          return;
-        }
+        const alias = fileSplits[index]
+          .replace(/["']styled-components["']|;|{|}|import|require|from/g, "")
+          .trim();
 
-        const fullPath = path.join(directoryPath, file);
-        const stats = statSync(fullPath);
-
-        if (stats.isFile()) {
-          info[fullPath] = readFileSync(fullPath, { encoding: "utf8" });
-        } else if (stats.isDirectory()) {
-          getAllFiles(fullPath);
-        }
-      });
-    }
-
-    function getAliasAndContentInfo() {
-      const aliasAndContentInfo = [];
-
-      for (const filePath in info) {
-        if (info[filePath].includes("styled-components")) {
-          const fileSplits = info[filePath].split("\n");
-          let index = fileSplits.findIndex(line =>
-            line.includes('from "styled-components";'),
-          );
-
-          const alias = fileSplits[index]
-            .replace(
-              /"styled-components"|;|import|{|}|require|import|const|let|var|=|from/g,
-              "",
-            )
-            .trim();
-
-          aliasAndContentInfo.push({
-            alias,
-            filePath,
-            fileContent: info[filePath],
-          });
-        }
+        styledComponentsInfo.push({
+          alias,
+          filePath,
+          fileContent: files[filePath],
+        });
       }
-
-      return aliasAndContentInfo;
     }
 
-    function getUserCssStrings(file) {
-      const userCss = [];
-      const cssStrings = file.fileContent.split("\n");
+    return styledComponentsInfo;
+  }
+
+  function getUserCss(styledComponentsInfo) {
+    const userCss = [];
+
+    styledComponentsInfo.forEach(info => {
+      const fileContent = info.fileContent.split("\n");
       let isStart = false;
 
-      cssStrings.forEach(cssString => {
-        if (cssString.includes("import") || cssString.includes("require")) {
+      fileContent.forEach(content => {
+        if (content.includes("import") || content.includes("require")) {
           return;
-        } else if (cssString.includes(file.alias)) {
+        } else if (content.includes(info.alias)) {
           isStart = true;
-        } else if (
-          isStart &&
-          cssString.includes(":") &&
-          cssString.includes(";")
-        ) {
-          userCss.push(cssString.split(":")[0].trim());
-        } else if (cssString.includes("`;")) {
+        } else if (isStart && content.includes(":") && content.includes(";")) {
+          userCss.push(content.split(":")[0].trim());
+        } else if (content.includes("`")) {
           isStart = false;
         }
       });
 
-      return userCss;
-    }
+      info.cssProperties = [...new Set(userCss)];
+    });
+  }
 
-    getAllFiles(directoryPath);
+  ipcMain.handle(
+    "get-styled-components-css-properties",
+    (event, directoryPath) => {
+      const files = getFiles(directoryPath);
+      const styledComponentsInfo = getStyledComponentsAlias(files);
+      getUserCss(styledComponentsInfo);
 
-    const aliasAndContentInfo = getAliasAndContentInfo();
-    const userCss = aliasAndContentInfo.flatMap(file =>
-      getUserCssStrings(file),
-    );
-    const finalCss = [...new Set(userCss)];
-
-    return finalCss;
-  });
+      return styledComponentsInfo;
+    },
+  );
 
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

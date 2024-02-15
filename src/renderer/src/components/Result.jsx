@@ -2,14 +2,21 @@ import { FaCheck } from "react-icons/fa";
 import Detail from "./Detail";
 import { useState } from "react";
 
-function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
+function Result({
+  isPerfect,
+  cssInfo,
+  userSelections,
+  cssData,
+  browsers,
+  cssCompatibilityResult,
+}) {
   const notSupportedProperties = [];
   const partialSupportProperties = [];
   const [isDetailClicked, setIsDetailClicked] = useState(false);
   const [isClickNotSupportCss, setIsClickNotSupportCss] = useState(true);
   const [clickedValue, setClickedValue] = useState("");
 
-  cssInfo.forEach(item => {
+  cssCompatibilityResult.forEach(item => {
     if (item.compatibility === "n") {
       notSupportedProperties.push(item.property);
     }
@@ -86,13 +93,13 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
               <div className="flex justify-evenly h-96 w-4/5 mb-2">
                 <div className="flex items-center flex-col m-10">
                   <div className="flex justify-center items-center border-8 w-24 h-24 border-red rounded-full mb-2 text-4xl">
-                    {notSupportedProperties.length}
+                    {deduplicatedNotSupportedProperties.length}
                   </div>
                   <div>Not Supported</div>
                 </div>
                 <div className="flex items-center flex-col m-10">
                   <div className="flex justify-center items-center border-8 w-24 h-24 border-yellow rounded-full mb-2 text-4xl">
-                    {partialSupportProperties.length}
+                    {deduplicatedPartialSupportProperties.length}
                   </div>
                   <div>Partial Supported</div>
                 </div>
@@ -137,11 +144,12 @@ function Result({ isPerfect, cssInfo, userSelections, cssData, browsers }) {
           ) : (
             <Detail
               cssData={cssData}
-              cssInfo={clickedValue}
+              clickedValue={clickedValue}
               isNotSupportCss={isClickNotSupportCss}
               browsers={browsers}
               userSelections={userSelections}
               setIsDetailClicked={setIsDetailClicked}
+              cssInfo={cssInfo}
             />
           )}
         </>
