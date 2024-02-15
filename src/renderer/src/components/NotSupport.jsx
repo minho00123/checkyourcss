@@ -18,12 +18,14 @@ function NotSupport({
     if (cssData.data[cssProperty]) {
       browserCompatibilityByVersions =
         cssData.data[cssProperty].stats[browsers[userSelect.browser].stat];
-    } else {
+    } else if (bcd.css.properties[cssProperty]) {
       const browserName = convertBrowserName(browsers[userSelect.browser].stat);
+      const stat =
+        bcd.css.properties[cssProperty].__compat.support[browserName];
 
-      propertyAddedVersion =
-        bcd.css.properties[cssProperty].__compat.support[browserName]
-          .version_added;
+      propertyAddedVersion = Array.isArray(stat)
+        ? parseInt(stat[0].version_added)
+        : parseInt(stat.version_added);
     }
 
     if (browserCompatibilityByVersions) {
@@ -211,40 +213,28 @@ function NotSupport({
           <div className="flex flex-col">
             {propertyInfo.map(info => {
               return (
-                <div className="mx-10 my-2 p-4 h-auto bg-red-200">
-                  <p className="font-bold">{info.path}</p>
-                  <p>
-                    {info.lines.map((line, index) => {
-                      if (index === 0) {
-                        return (
-                          <>
-                            <span>{`line ${line + 1}, `}</span>
-                            <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
-                              {`${line + 1} ${info.contents[line]}`}
-                            </pre>
-                          </>
-                        );
-                      } else if (info.lines.length - 1 === index) {
-                        return (
-                          <>
-                            <span>{`${line + 1}`}</span>
-                            <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
-                              {`${line + 1} ${info.contents[line]}`}
-                            </pre>
-                          </>
-                        );
-                      } else {
-                        return (
-                          <>
-                            <span>{`${line + 1}, `}</span>
-                            <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
-                              {`${line + 1} ${info.contents[line]}`}
-                            </pre>
-                          </>
-                        );
-                      }
+                <div>
+                  <div className="mx-10 my-2 p-4 h-auto bg-red-200">
+                    <p className="font-bold">{info.path}</p>
+                    <p>
+                      {info.lines.map((line, index) => {
+                        if (index === 0) {
+                          return <span>{`line ${line + 1}, `}</span>;
+                        } else if (info.lines.length - 1 === index) {
+                          return <span>{`${line + 1}`}</span>;
+                        } else {
+                          return <span>{`${line + 1}, `}</span>;
+                        }
+                      })}
+                    </p>
+                    {info.lines.map(number => {
+                      return (
+                        <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
+                          {`${number + 1} ${info.contents[number]}`}
+                        </pre>
+                      );
                     })}
-                  </p>
+                  </div>
                 </div>
               );
             })}
