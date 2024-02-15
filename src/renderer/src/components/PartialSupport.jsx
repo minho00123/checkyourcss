@@ -110,47 +110,6 @@ function PartialSupport({
               <>
                 <p className="font-bold">{info.path}</p>
                 <p>
-                  {info.lines.map((line, index) => {
-                    if (index === 0) {
-                      return (
-                        <>
-                          <span>{`line ${line + 1}, `}</span>
-                          <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
-                            {`${line + 1} ${info.contents[line]}`}
-                          </pre>
-                        </>
-                      );
-                    } else if (info.lines.length - 1 === index) {
-                      return (
-                        <>
-                          <span>{`${line + 1}`}</span>
-                          <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
-                            {`${line + 1} ${info.contents[line]}`}
-                          </pre>
-                        </>
-                      );
-                    } else {
-                      return (
-                        <>
-                          <span>{`${line + 1}, `}</span>
-                          <pre className="whitespace-normal m-3 px-5 py-3 bg-black text-white">
-                            {`${line + 1} ${info.contents[line]}`}
-                          </pre>
-                        </>
-                      );
-                    }
-                  })}
-                </p>
-              </>
-            );
-          })}
-        </div>
-        <div className="mx-5 my-2 p-4 h-auto bg-yellow-200">
-          {propertyInfo.map(info => {
-            return (
-              <>
-                <p className="font-bold">{info.path}</p>
-                <p>
                   {" "}
                   {info.lines.map((line, index) => {
                     if (index === 0) {
