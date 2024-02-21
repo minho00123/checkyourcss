@@ -124,8 +124,8 @@ function Home() {
       const userCssData = await (cssFrameworkType === "tailwindCss"
         ? window.userCssDataAPI.getTailwindCssData(projectPath)
         : window.userCssDataAPI.getStyledComponentsData(projectPath));
-
       const result = checkCssCompatibility(userCssData);
+
       setCssInfo(userCssData);
       setCssCompatibilityResult(result);
 
