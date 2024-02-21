@@ -44,7 +44,7 @@ function PartialSupport({
 
   const propertyInfo = [];
 
-  if (cssInfo.cssProperties) {
+  if (cssInfo[0].cssProperties) {
     cssInfo.forEach(info => {
       if (info.fileContent.includes(cssProperty)) {
         const fileContent = info.fileContent.split("\n");
