@@ -4,6 +4,11 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import axios from "axios";
 import { readdirSync, statSync, readFileSync } from "fs";
 import { execSync } from "child_process";
+import os from "os";
+import fs from "fs";
+import postcss from "postcss";
+import traverse from "@babel/traverse";
+import { parse } from "@babel/parser";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -62,259 +67,204 @@ app.whenReady().then(() => {
     return directoryPath;
   });
 
-  async function getTailwindCssData() {
-    try {
-      const response = await axios.get(
-        "https://raw.githubusercontent.com/Devzstudio/tailwind_to_css/main/cheatsheet.ts",
-      );
-      const tailwindCssData = JSON.parse(
-        response.data.slice(
-          response.data.indexOf("["),
-          response.data.lastIndexOf("]") + 1,
-        ),
-      );
+  function copyFiles(sourceDir, targetDir) {
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
 
-      return tailwindCssData;
+    const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (
+        [
+          "node_modules",
+          ".DS_Store",
+          ".git",
+          ".github",
+          "dist",
+          "build",
+          "out",
+        ].includes(entry.name)
+      ) {
+        continue;
+      }
+
+      const sourcePath = path.join(sourceDir, entry.name);
+      const targetPath = path.join(targetDir, entry.name);
+
+      if (entry.isDirectory()) {
+        copyFiles(sourcePath, targetPath);
+      } else {
+        fs.copyFileSync(sourcePath, targetPath);
+      }
+    }
+  }
+
+  function findBuildDirectory(directoryPath) {
+    const entries = fs.readdirSync(directoryPath);
+    const buildDirectory = entries.find(entry =>
+      ["build", "out", "dist"].includes(entry),
+    );
+
+    return path.join(directoryPath, buildDirectory);
+  }
+
+  function traverseDirectory(directoryPath, callback) {
+    const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(directoryPath, entry.name);
+
+      if (entry.isDirectory()) {
+        traverseDirectory(fullPath, callback);
+      } else {
+        callback(fullPath);
+      }
+    }
+  }
+
+  function getCssFilePath(directoryPath) {
+    let cssFilePath = "";
+
+    traverseDirectory(directoryPath, filePath => {
+      if (filePath.endsWith(".css")) {
+        cssFilePath = filePath;
+      }
+    });
+
+    return cssFilePath;
+  }
+
+  async function getTailwindCssProperties() {
+    const tempDir = path.join(os.tmpdir(), "build-folder");
+
+    copyFiles(process.cwd(), tempDir);
+    process.chdir(tempDir);
+    execSync("npm install; npm run build");
+
+    const buildDirectoryPath = findBuildDirectory(process.cwd());
+    const cssFilePath = getCssFilePath(buildDirectoryPath);
+    const css = fs.readFileSync(cssFilePath, "utf8");
+
+    try {
+      const result = await postcss().process(css, { from: cssFilePath });
+      const cssProperties = [];
+      const root = result.root;
+
+      root.walkDecls(decl => {
+        if (decl.parent.selector.startsWith(".")) {
+          cssProperties.push({ [decl.prop]: decl.parent.selector });
+        }
+      });
+
+      return cssProperties;
     } catch (err) {
       console.error(err);
     }
   }
 
-  function getFiles(directoryPath) {
-    const files = {};
-    const ignoredFiles = [
-      "node_modules",
-      "build",
-      "dist",
-      "out",
-      ".DS_Store",
-      "package.json",
-      "package-lock.json",
-    ];
+  function parseFileToAST(filePath) {
+    const fileContent = fs.readFileSync(filePath, "utf-8");
 
-    function traverseDirectory(currentPath) {
-      const entries = readdirSync(currentPath);
-
-      entries.forEach(entry => {
-        if (ignoredFiles.includes(entry)) {
-          return;
-        }
-
-        const entryPath = path.join(currentPath, entry);
-        const stats = statSync(entryPath);
-
-        if (stats.isDirectory()) {
-          traverseDirectory(entryPath);
-        } else if (stats.isFile()) {
-          files[entryPath] = readFileSync(entryPath, { encoding: "utf8" });
-        }
-      });
-    }
-
-    traverseDirectory(directoryPath);
-
-    return files;
+    return parse(fileContent, {
+      sourceType: "module",
+      plugins: ["jsx", "typescript"],
+    });
   }
 
-  function getClassContent(content) {
-    if (content.includes("className")) {
-      return content.slice(content.indexOf("className"));
-    } else if (content.includes("class")) {
-      return content.slice(content.indexOf("class"));
-    }
+  function extractTailwindClasses(filePath) {
+    const ast = parseFileToAST(filePath);
+    const tailwindClasses = new Set();
 
-    return "";
-  }
-
-  function extractClasses(classContent) {
-    const tailwindCssClasses = [];
-    const quoteType = classContent.includes('"') ? '"' : "'";
-    const startIndex = classContent.indexOf(quoteType);
-    const endIndex = classContent.lastIndexOf(quoteType);
-    if (startIndex !== -1 && endIndex !== -1) {
-      const classNames = classContent
-        .slice(startIndex + 1, endIndex)
-        .split(" ");
-      tailwindCssClasses.push(...classNames);
-    }
-
-    return tailwindCssClasses;
-  }
-
-  function getTailwindCssClasses(files) {
-    const tailwindCssInfo = [];
-
-    for (const filePath in files) {
-      if (
-        files[filePath].includes("className") ||
-        files[filePath].includes("class")
-      ) {
-        const fileContent = files[filePath]
-          .replace(/\n/g, "")
-          .match(/<([^>]*)>/g);
-        const tailwindClasses = [];
-
-        fileContent.forEach(content => {
-          const classContent = getClassContent(content);
-          const tailwindCssClasses = extractClasses(classContent);
-
-          tailwindClasses.push(...tailwindCssClasses);
-        });
-
-        tailwindCssInfo.push({
-          filePath,
-          content: files[filePath],
-          tailwindClasses: [...new Set(tailwindClasses)],
-        });
-      }
-    }
-
-    return tailwindCssInfo;
-  }
-
-  function compareCssClasses(tailwindCssData, cssClass) {
-    const cssProperties = [];
-
-    tailwindCssData.forEach(element => {
-      element.content.forEach(content => {
-        content.table.forEach(list => {
-          const regex = /--(.*?)-/g;
-
-          if (cssClass.includes(list[0])) {
-            const properties = list[1].split("\n");
-
-            for (let i = 0; i < properties.length; i++) {
-              const property = properties[i].split(":")[0];
-
-              if (!regex.test(property)) {
-                cssProperties.push(property);
-              }
-            }
-          } else if (cssClass.includes(list[1])) {
-            const properties = list[2].split("\n");
-
-            for (let i = 0; i < properties.length; i++) {
-              const property = properties[i].split(":")[0];
-
-              if (!regex.test(property)) {
-                cssProperties.push(property);
-              }
-            }
+    traverse(ast, {
+      JSXAttribute({ node }) {
+        if (node.name.name === "className") {
+          if (node.value.type === "StringLiteral") {
+            node.value.value
+              .split(" ")
+              .forEach(className => tailwindClasses.add(className));
+          } else if (
+            node.value.type === "JSXExpressionContainer" &&
+            node.value.expression.type === "StringLiteral"
+          ) {
+            node.value.expression.value
+              .split(" ")
+              .forEach(className => tailwindClasses.add(className));
           }
-        });
-      });
+        }
+      },
     });
 
-    return [...cssProperties];
+    return [...tailwindClasses];
   }
 
-  function getHoverClass(cssClass) {
-    return cssClass
-      .replaceAll("\n", " ")
-      .split(" ")
-      .filter(i => i.startsWith("hover:"))
-      .map(i => i.replace("hover:", ""));
+  function extractTailwindClassesFromDirectory(
+    directoryPath,
+    pathAndTailwindClasses,
+  ) {
+    const files = fs.readdirSync(directoryPath);
+
+    files.forEach(file => {
+      const filePath = path.join(directoryPath, file);
+      const stats = fs.statSync(filePath);
+
+      if (stats.isFile() && /\.(js|jsx|ts|tsx)$/.test(file)) {
+        if (!filePath.includes("node_modules")) {
+          const tailwindClasses = extractTailwindClasses(filePath);
+
+          if (tailwindClasses.length > 0) {
+            pathAndTailwindClasses.push({
+              filePath: filePath,
+              tailwindClasses: [...tailwindClasses],
+              content: fs.readFileSync(filePath, "utf8"),
+            });
+          }
+        }
+      } else if (stats.isDirectory()) {
+        extractTailwindClassesFromDirectory(filePath, pathAndTailwindClasses);
+      }
+    });
+
+    return pathAndTailwindClasses;
   }
 
-  function getCssProperties(tailwindCssData, tailwindCssInfo) {
-    const exceptionalSupportedTailwindCssClasses = {
-      pt: "padding-top",
-      pb: "padding-bottom",
-      pl: "padding-left",
-      pr: "padding-right",
-      p: "padding",
-      mb: "margin-bottom",
-      m: "margin",
-      mt: "margin-top",
-      ml: "margin-left",
-      mr: "margin-right",
-      w: "width",
-      h: "height",
-      top: "top",
-      bottom: "bottom",
-      left: "left",
-      right: "right",
-      bg: "background",
-      border: "border-color",
-      text: "color",
-      aspect: "aspect-ratio",
-      color: "color",
-      "max-w": "max-width",
-      "max-h": "max-height",
-    };
-
-    tailwindCssInfo.forEach(info => {
+  function createCssInfo(pathAndTailwindClasses, cssPropertiesAndTwInfo) {
+    pathAndTailwindClasses.forEach(info => {
       info.cssMatching = {};
 
       info.tailwindClasses.forEach(tailwindClass => {
-        const cssClasses = [
-          ...new Set(compareCssClasses(tailwindCssData, tailwindClass)),
-        ];
-
-        cssClasses.forEach(cssClass => {
-          if (Object.keys(info.cssMatching).includes(cssClass)) {
-            info.cssMatching[cssClass].push(tailwindClass);
-          } else {
-            info.cssMatching[cssClass] = [];
-            info.cssMatching[cssClass].push(tailwindClass);
-          }
-        });
-
-        if (tailwindClass.includes("hover")) {
-          const hoverClass = getHoverClass(tailwindClass);
-          const cssClasses = [
-            ...new Set(compareCssClasses(tailwindCssData, hoverClass[0])),
-          ];
-
-          cssClasses.forEach(cssClass => {
-            if (Object.keys(info.cssMatching).includes(cssClass)) {
-              info.cssMatching[cssClass].push(tailwindClass);
-            } else {
-              info.cssMatching[cssClass] = [];
-              info.cssMatching[cssClass].push(tailwindClass);
-            }
-          });
-        }
-      });
-
-      const exceptionalClasses = info.tailwindClasses.filter(className =>
-        className.includes("["),
-      );
-
-      if (exceptionalClasses) {
-        exceptionalClasses.forEach(className => {
-          const property = className.split("-[")[0].replace(".", "");
+        cssPropertiesAndTwInfo.forEach(item => {
+          const cssPropertyName = Object.keys(item)[0];
+          const cssPropertyValue = item[cssPropertyName].slice(1);
 
           if (
-            Object.keys(info.cssMatching).includes(
-              exceptionalSupportedTailwindCssClasses[property],
-            )
+            cssPropertyValue === tailwindClass &&
+            !cssPropertyName.includes("--tw-")
           ) {
-            info.cssMatching[
-              exceptionalSupportedTailwindCssClasses[property]
-            ].push(className);
-          } else {
-            info.cssMatching[exceptionalSupportedTailwindCssClasses[property]] =
-              [];
-            info.cssMatching[
-              exceptionalSupportedTailwindCssClasses[property]
-            ].push(className);
+            if (info.cssMatching[cssPropertyName]) {
+              info.cssMatching[cssPropertyName].push(tailwindClass);
+            } else {
+              info.cssMatching[cssPropertyName] = [tailwindClass];
+            }
           }
         });
-      }
+      });
     });
   }
 
   ipcMain.handle(
     "get-tailwind-css-properties",
-    async (event, directoryPath) => {
-      const tailwindCssData = await getTailwindCssData();
-      const files = getFiles(directoryPath);
-      const tailwindCssInfo = getTailwindCssClasses(files);
+    async (event, projectDirectory) => {
+      const pathAndTailwindClasses = [];
+      const cssPropertiesAndTwInfo = await getTailwindCssProperties();
 
-      getCssProperties(tailwindCssData, tailwindCssInfo);
+      extractTailwindClassesFromDirectory(
+        projectDirectory,
+        pathAndTailwindClasses,
+      );
+      createCssInfo(pathAndTailwindClasses, cssPropertiesAndTwInfo);
 
-      return tailwindCssInfo;
+      return pathAndTailwindClasses;
     },
   );
 
