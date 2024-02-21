@@ -1,14 +1,13 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
-import path, { join } from "path";
-import { electronApp, optimizer, is } from "@electron-toolkit/utils";
-import axios from "axios";
-import { readdirSync, statSync, readFileSync } from "fs";
-import { execSync } from "child_process";
 import os from "os";
 import fs from "fs";
+import axios from "axios";
 import postcss from "postcss";
 import traverse from "@babel/traverse";
+import path, { join } from "path";
 import { parse } from "@babel/parser";
+import { execSync } from "child_process";
+import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -109,16 +108,16 @@ app.whenReady().then(() => {
     return path.join(directoryPath, buildDirectory);
   }
 
-  function traverseDirectory(directoryPath, callback) {
+  function traverseDirectory(directoryPath, checkCssFile) {
     const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
 
     for (const entry of entries) {
       const fullPath = path.join(directoryPath, entry.name);
 
       if (entry.isDirectory()) {
-        traverseDirectory(fullPath, callback);
+        traverseDirectory(fullPath, checkCssFile);
       } else {
-        callback(fullPath);
+        checkCssFile(fullPath);
       }
     }
   }
@@ -167,7 +166,7 @@ app.whenReady().then(() => {
     const fileContent = fs.readFileSync(filePath, "utf-8");
 
     return parse(fileContent, {
-      sourceType: "module",
+      sourceType: "unambiguous",
       plugins: ["jsx", "typescript"],
     });
   }
