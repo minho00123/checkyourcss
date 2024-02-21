@@ -174,7 +174,6 @@ app.whenReady().then(() => {
 
   function compareCssClasses(tailwindCssData, cssClass) {
     const cssProperties = [];
-    // const test = [];
 
     tailwindCssData.forEach(element => {
       element.content.forEach(content => {
