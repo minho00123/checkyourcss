@@ -45,7 +45,7 @@ function Home() {
           },
           Samsung_Mobile: {
             version: agentsData.samsung.version_list,
-            stat: "samasung",
+            stat: "samsung",
           },
           Chrome_for_android: {
             version: agentsData.and_chr.version_list,
@@ -141,7 +141,7 @@ function Home() {
     const userCss = [];
     const result = [];
 
-    if (userCssData.cssProperties) {
+    if (userCssData[0].cssProperties) {
       userCssData.forEach(data => {
         userCss.push(...data.cssProperties);
       });
@@ -204,6 +204,18 @@ function Home() {
     });
 
     return result;
+  }
+
+  function convertToNumberWithOneDecimal(numberRangeStr) {
+    const parts = numberRangeStr.split("-");
+    const numbers = parts.map(part => {
+      const match = part.match(/^\d+\.\d?/);
+
+      return match ? parseFloat(match[0]) : NaN;
+    });
+    const average = (numbers[0] + numbers[1]) / 2;
+
+    return Math.round(average * 10) / 10;
   }
 
   function convertBrowserName(browserStat) {

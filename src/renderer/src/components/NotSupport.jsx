@@ -24,8 +24,17 @@ function NotSupport({
         bcd.css.properties[cssProperty].__compat.support[browserName];
 
       propertyAddedVersion = Array.isArray(stat)
-        ? parseInt(stat[0].version_added)
-        : parseInt(stat.version_added);
+        ? stat[0].version_added
+        : stat.version_added;
+
+      if (isNaN(propertyAddedVersion)) {
+        for (let i = 0; propertyAddedVersion.length; i++) {
+          if (isNaN(propertyAddedVersion[i])) {
+            propertyAddedVersion = propertyAddedVersion.substring(i + 1);
+            break;
+          }
+        }
+      }
     }
 
     if (browserCompatibilityByVersions) {
@@ -88,7 +97,7 @@ function NotSupport({
 
   const propertyInfo = [];
 
-  if (cssInfo.cssProperties) {
+  if (cssInfo[0].cssProperties) {
     cssInfo.forEach(info => {
       if (info.fileContent.includes(cssProperty)) {
         const fileContent = info.fileContent.split("\n");
