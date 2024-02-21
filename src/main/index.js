@@ -174,13 +174,13 @@ app.whenReady().then(() => {
 
   function compareCssClasses(tailwindCssData, cssClass) {
     const cssProperties = [];
+    // const test = [];
 
     tailwindCssData.forEach(element => {
       element.content.forEach(content => {
         content.table.forEach(list => {
           const regex = /--(.*?)-/g;
-
-          if (cssClass.includes(list[0])) {
+          if (cssClass === list[0]) {
             const properties = list[1].split("\n");
 
             for (let i = 0; i < properties.length; i++) {

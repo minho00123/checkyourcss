@@ -17,7 +17,7 @@ function Result({
   const [clickedValue, setClickedValue] = useState("");
 
   cssCompatibilityResult.forEach(item => {
-    if (item.compatibility === "n") {
+    if (item.compatibility.includes("n")) {
       notSupportedProperties.push(item.property);
     }
 
