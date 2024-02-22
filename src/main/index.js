@@ -267,61 +267,167 @@ app.whenReady().then(() => {
     },
   );
 
-  function getStyledComponentsAlias(files) {
-    const styledComponentsInfo = [];
+  function findStyledVariableNames(fileContents) {
+    const ast = parse(fileContents, {
+      sourceType: "unambiguous",
+      plugins: ["jsx", "typescript"],
+    });
+    const imports = [];
 
-    for (const filePath in files) {
-      if (files[filePath].includes("styled-components")) {
-        const fileSplits = files[filePath].split("\n");
-        const regex = /from ['"]styled-components['"];/g;
-        const index = fileSplits.findIndex(line => line.match(regex));
+    traverse(ast, {
+      ImportDeclaration(path) {
+        if (path.node.source.value === "styled-components") {
+          path.node.specifiers.forEach(specifier => {
+            if (specifier.type === "ImportDefaultSpecifier") {
+              imports.push(specifier.local.name);
+            } else if (specifier.type === "ImportSpecifier") {
+              imports.push(specifier.imported.name);
+            }
+          });
+        }
+      },
+      VariableDeclarator(path) {
+        if (
+          path.node.init &&
+          path.node.init.callee &&
+          path.node.init.callee.name === "require" &&
+          path.node.init.arguments &&
+          path.node.init.arguments.length > 0 &&
+          path.node.init.arguments[0].value === "styled-components"
+        ) {
+          imports.push(path.node.id.name);
+        }
+      },
+    });
 
-        const alias = fileSplits[index]
-          .replace(/["']styled-components["']|;|{|}|import|require|from/g, "")
-          .trim();
+    return imports;
+  }
 
-        styledComponentsInfo.push({
-          alias,
-          filePath,
-          fileContent: files[filePath],
-        });
+  function extractStyledComponentsCSS(fileContents, styledVariableNames) {
+    if (!styledVariableNames) {
+      return;
+    }
+
+    const ast = parse(fileContents, {
+      sourceType: "unambiguous",
+      plugins: ["jsx", "typescript"],
+    });
+
+    const cssProperties = new Set();
+
+    styledVariableNames.forEach(styledVariableName => {
+      traverse(ast, {
+        TaggedTemplateExpression(path) {
+          const tagPath = path.get("tag");
+
+          if (tagPath.isCallExpression()) {
+            const calleeName = tagPath.get("callee").node.name;
+
+            if (styledVariableName.includes(calleeName)) {
+              extractCSSProperties(path, cssProperties);
+            }
+          } else if (
+            tagPath.isMemberExpression() &&
+            tagPath.get("object").node.name &&
+            styledVariableName.includes(tagPath.get("object").node.name)
+          ) {
+            extractCSSProperties(path, cssProperties);
+          } else if (
+            tagPath.isIdentifier() &&
+            styledVariableName.includes(tagPath.node.name)
+          ) {
+            extractCSSProperties(path, cssProperties);
+          }
+        },
+      });
+    });
+
+    return Array.from(cssProperties);
+  }
+
+  function extractCSSProperties(path, cssProperties) {
+    path
+      .get("quasi")
+      .get("quasis")
+      .forEach(quasiPath => {
+        const cssText = quasiPath.node.value.raw;
+        const startLine = quasiPath.node.loc.start.line;
+        const regex = /(\w+-?\w+)\s*:/g;
+        let match;
+
+        while ((match = regex.exec(cssText))) {
+          const property = match[1];
+          const lineOffset = calculateLineOffset(
+            cssText.substring(0, match.index),
+          );
+          const propertyLine = startLine + lineOffset;
+
+          cssProperties.add({ property, line: propertyLine });
+        }
+      });
+  }
+
+  function calculateLineOffset(text) {
+    return (text.match(/\n/g) || []).length;
+  }
+
+  function getStyledComponentsCss(directoryPath, styledComponentsCss) {
+    const filesInDirectory = fs.readdirSync(directoryPath);
+
+    for (const file of filesInDirectory) {
+      if (
+        file === "node_modules" ||
+        file === "build" ||
+        file === "out" ||
+        file === "dist"
+      ) {
+        continue;
+      }
+
+      const filePath = path.join(directoryPath, file);
+      const stats = fs.statSync(filePath);
+      let cssProperties;
+
+      if (stats.isDirectory()) {
+        getStyledComponentsCss(filePath, styledComponentsCss);
+      } else {
+        const fileContents = fs.readFileSync(filePath, "utf8");
+        const styledComponentsRegex =
+          /from ['"]styled-components(?:\/native)?['"]|require\(['"]styled-components(?:\/native)?['"]\)/;
+
+        if (styledComponentsRegex.test(fileContents)) {
+          const styledVariableNames = findStyledVariableNames(fileContents);
+
+          cssProperties = extractStyledComponentsCSS(
+            fileContents,
+            styledVariableNames,
+          );
+          cssProperties = cssProperties.map(info => {
+            return info.property;
+          });
+        }
+
+        if (cssProperties && cssProperties.length > 0) {
+          styledComponentsCss.push({
+            filePath: filePath,
+            cssProperties: cssProperties,
+            fileContent: fs.readFileSync(filePath, "utf8"),
+          });
+        }
       }
     }
 
-    return styledComponentsInfo;
-  }
-
-  function getUserCss(styledComponentsInfo) {
-    const userCss = [];
-
-    styledComponentsInfo.forEach(info => {
-      const fileContent = info.fileContent.split("\n");
-      let isStart = false;
-
-      fileContent.forEach(content => {
-        if (content.includes("import") || content.includes("require")) {
-          return;
-        } else if (content.includes(info.alias)) {
-          isStart = true;
-        } else if (isStart && content.includes(":") && content.includes(";")) {
-          userCss.push(content.split(":")[0].trim());
-        } else if (content.includes("`")) {
-          isStart = false;
-        }
-      });
-
-      info.cssProperties = [...new Set(userCss)];
-    });
+    return styledComponentsCss;
   }
 
   ipcMain.handle(
     "get-styled-components-css-properties",
     (event, directoryPath) => {
-      const files = getFiles(directoryPath);
-      const styledComponentsInfo = getStyledComponentsAlias(files);
-      getUserCss(styledComponentsInfo);
+      const styledComponentsCss = [];
 
-      return styledComponentsInfo;
+      getStyledComponentsCss(directoryPath, styledComponentsCss);
+
+      return styledComponentsCss;
     },
   );
 
