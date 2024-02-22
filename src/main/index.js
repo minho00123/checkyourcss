@@ -373,6 +373,7 @@ app.whenReady().then(() => {
 
   function getStyledComponentsCss(directoryPath, styledComponentsCss) {
     const filesInDirectory = fs.readdirSync(directoryPath);
+
     for (const file of filesInDirectory) {
       if (
         file === "node_modules" ||
