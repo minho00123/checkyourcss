@@ -5,6 +5,11 @@
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
+  "build": {
+    "mac": {
+      "icon": "resources/cyc.png"
+    }
+  },
   "scripts": {
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
@@ -23,6 +28,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@mdn/browser-compat-data": "^5.5.9",
     "axios": "^1.6.7",
+    "checkyourcss": "^1.0.0",
     "electron-updater": "^6.1.7",
     "react-icons": "^5.0.1",
     "react-router-dom": "^6.21.3"
@@ -36,6 +42,7 @@
     "autoprefixer": "^10.4.17",
     "electron": "^28.2.0",
     "electron-builder": "^24.9.1",
+    "electron-packager": "^17.1.2",
     "electron-vite": "^2.0.0",
     "eslint": "^8.56.0",
     "eslint-config-airbnb": "^19.0.4",
