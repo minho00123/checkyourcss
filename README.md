@@ -20,12 +20,26 @@
 
 # 📌 Table of Contents
 
+- [기술 스택]()
+- [npm 시연]()
+- [vscode 시연]()
+- [프로젝트 소개 - 왜 CSS 호환성이 중요할까??]()
+  - [CSS 호환성 체크를 왜 3가지 방법으로 .?!]()
+- [겪었던 문제들]()
+  - [Utility-first CSS에서 사용된 CSS만 가져오기]()
+  - [빌드된 Utility-first-CSS와 Styled-components에서 정확히 CSS속성만 추출할 수 있을까?]()
+    - [AST란?]()
+  - [처음 만들어보는 npm package]()
+  - [처음 만들어보는 vscode extension]()
+
 # 🛠 Tech Stacks
 
 ![Electron](https://img.shields.io/badge/electron-%2320232a.svg?style=for-the-badge&logo=electron&logoColor=%47848F)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+
+# 🎬시연
 
 # 📌 Introduction
 
@@ -79,7 +93,7 @@
 
 - 프로젝트를 빌드시키기 위해서는 Node.js 내장 모듈인 `os` 모듈의 `tmpdirectory()` 메서드를 사용하였습니다. 이 메서드는 개발자가 운영체제에 관계없이 임시 디렉토리의 경로를 쉽게 얻을 수 있게 해줍니다. 임시 디렉토리에 저장된 파일은 운영체제나 애플리케이션에 따라 정기적으로 삭제될 수 있습니다. 따라서 사용자 프로젝트에 영향없이 임시 디렉토리에 빌드시키고, 생성된 파일을 이용하여 CSS 속성을 가져오게 되었습니다.
 
-## 🔥 빌드된 Utility-first-CSS와 Styled-components에서 CSS속성만 가져오기
+## 🔥 빌드된 Utility-first-CSS와 Styled-components에서 정확히 CSS속성만 추출할 수 있을까?
 
 ### ❓ AST란
 
@@ -105,4 +119,108 @@
 
 가장 최상위 노드는 변수를 선언하는 const이며 아래로 sum이라는 변수가 있고 그 아래로 연산자를 의미하는 + 와 왼쪽에는 5, 오른쪽에는 3이 있다는 이러한 구조의 AST가 생성되게 됩니다.
 
+조금 더 자세히 보면
+
+```
+function consolelog() {
+  console.log("hi");
+}
+```
+
+이 코드를 AST로 변환해 보면
+
+```
+{
+  "type": "Program",
+  "start": 0,
+  "end": 36,
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "start": 0,
+      "end": 36,
+      "id": {
+        "type": "Identifier",
+        "start": 9,
+        "end": 10,
+        "name": "a"
+      },
+      "expression": false,
+      "generator": false,
+      "async": false,
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "start": 13,
+        "end": 36,
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "start": 17,
+            "end": 34,
+            "expression": {
+              "type": "CallExpression",
+              "start": 17,
+              "end": 33,
+              "callee": {
+                "type": "MemberExpression",
+                "start": 17,
+                "end": 28,
+                "object": {
+                  "type": "Identifier",
+                  "start": 17,
+                  "end": 24,
+                  "name": "console"
+                },
+                "property": {
+                  "type": "Identifier",
+                  "start": 25,
+                  "end": 28,
+                  "name": "log"
+                },
+                "computed": false,
+                "optional": false
+              },
+              "arguments": [
+                {
+                  "type": "Literal",
+                  "start": 29,
+                  "end": 32,
+                  "value": "a",
+                  "raw": "\"a\""
+                }
+              ],
+              "optional": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "sourceType": "module"
+}
+```
+
+이러한 형태로 모드 의미를 갖는 토큰들로 구분됨을 알 수 있습니다.
+
 이러한 방식과 마찬가지로 css파일이나 styled-component가 사용된 파일에서 코드를 파싱해서 생성된 AST를 순회하여 구조를 분석하고 단어의 의미를 파악하여 CSS속성을 찾는 방식으로 프로젝트를 진행하였습니다.
+
+## ❗️실시간으로 CSS의 호환성을 확인해보자
+
+electron을 사용해서 만든 데스크탑 앱은 진행중인 프로젝트를 중단하고 데스크탑 어플에 넣어 확인 하는 방식이였습니다. 그러던 중 개발자들이 원하는 방식은 무엇일까 고민하던 중 불현듯 우리가 항상 사용하는 프리티어가 생각났습니다. 그렇게 추가로 npm package와 VScode extension을 만들면 좋겠다고 생각 했습니다,
+
+- ### npm package 만들기
+  저희가 만드는 check your css를 사용하는 대상은 개발자임을 항상 염두에 두고 프로젝트를 진행하였습니다. 개발자들은 보통 어떻게 사용하는가, 어떻게 사용하면 조금 더 직관적으로 사용할 수 있을까.
+
+따라서
+
+1. 터미널에 npx cyc를 입력
+2. 체크하고 싶은 브라우저와 브라우저별 버전을 선택
+3. 확인
+   이러한 방식을 생각하였으나 매번 확인이 번거롭고 추후 호환되지 않는 css들에 대한 처리가 부족하다고 생각이 되어
+
+4. npx cyc --init 명령어를 통해 체크하고 싶은 브라우저와 브라우저별 버전을 선택후 config 파일을 자동 생성
+5. 그후 npx cyc를 할 때 마다 해당 브라우저와 버전들에 대한 css 호환성을 체크
+6. 변경을 원하면 config파일을 직접 조작하거나 npx cyc --init을 다시 터미널에 입력해서 수정
+7. css 수정방법 제안 후 수정
+   이 방식으로 변환하였습니다.
