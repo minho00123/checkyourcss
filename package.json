@@ -7,7 +7,32 @@
   "homepage": "https://electron-vite.org",
   "build": {
     "mac": {
-      "icon": "resources/cyc.png"
+      "target": [
+        "default"
+      ],
+      "icon": "resources/cyc-logo.png"
+    },
+    "dmg": {
+      "title": "CheckYourCss",
+      "icon": "resources/cyc-logo.png"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "resources/cyc-logo.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "resources/cyc-logo.png",
+      "createDesktopShortcut": true
     }
   },
   "scripts": {

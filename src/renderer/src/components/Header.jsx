@@ -1,4 +1,4 @@
-import cycImage from "../../../../resources/cyc.png";
+import cycImage from "../../../../resources/cyc-logo.png";
 
 function Header() {
   function handleImageClick() {
@@ -10,7 +10,7 @@ function Header() {
       <img
         src={cycImage}
         alt="cyc logo"
-        className="absolute -top-11 left-5 w-48"
+        className="absolute top-1 left-5 w-24"
         onClick={handleImageClick}
       />
       <h1 className="text-4xl font-bold drop-shadow-2xl">Check Your CSS</h1>
