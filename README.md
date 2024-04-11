@@ -1,7 +1,7 @@
 # Check Your CSS
 
 <p align="center">
-<img src="./resources/cyc-logo.png" alt="cyc logo">
+<img src="./resources/cyc-logo.png" alt="cyc logo" width="300px">
 </p>
 
 <p align="center">
@@ -20,17 +20,16 @@
 
 # 📌 Table of Contents
 
-- [기술 스택]()
-- [npm 시연]()
-- [vscode 시연]()
-- [프로젝트 소개 - 왜 CSS 호환성이 중요할까??]()
-  - [CSS 호환성 체크를 왜 3가지 방법으로 .?!]()
-- [겪었던 문제들]()
-  - [Utility-first CSS에서 사용된 CSS만 가져오기]()
-  - [빌드된 Utility-first-CSS와 Styled-components에서 정확히 CSS속성만 추출할 수 있을까?]()
-    - [AST란?]()
-  - [처음 만들어보는 npm package]()
-  - [처음 만들어보는 vscode extension]()
+- [기술 스택](#🛠-tech-stacks)
+- [시연](#🎬시연)
+- [프로젝트 소개 - 왜 CSS 호환성이 중요할까??](#❓-why-css-compatibility)
+  - [CSS 호환성 체크를 왜 3가지 방법으로 .?!](#⚙️-three-different-platforms)
+- [겪었던 문제들](#📌-challenges)
+  - [Utility-first CSS에서 사용된 CSS만 가져오기](#🔥-utility-first-css에서-사용된-css만-가져오기)
+  - [빌드된 Utility-first-CSS와 Styled-components에서 정확히 CSS속성만 추출할 수 있을까?](#🔥-빌드된-utility-first-css와-styled-components에서-정확히-css속성만-추출할-수-있을까)
+    - [AST란?](#❓-ast란)
+  - [처음 만들어보는 npm package](#npm-package-만들기)
+  - [처음 만들어보는 vscode extension](#vscode-extension-만들기)
 
 # 🛠 Tech Stacks
 
