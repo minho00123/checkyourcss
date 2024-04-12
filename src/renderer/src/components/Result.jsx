@@ -1,3 +1,4 @@
+import React from "react";
 import { FaCheck } from "react-icons/fa";
 import Detail from "./Detail";
 import { useState } from "react";

@@ -1,3 +1,4 @@
+import React from "react";
 import bcd from "@mdn/browser-compat-data";
 
 function NotSupport({
@@ -155,7 +156,10 @@ function NotSupport({
   }
 
   return (
-    <div className="flex flex-col justify-center items-center mb-10">
+    <div
+      data-testid="not-support-component"
+      className="flex flex-col justify-center items-center mb-10"
+    >
       <h3 className="text-3xl font-bold">
         <span className="text-red font-bold">{cssProperty}</span> is not
         supported.

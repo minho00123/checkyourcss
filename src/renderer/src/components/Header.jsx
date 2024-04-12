@@ -1,3 +1,4 @@
+import React from "react";
 import cycImage from "../../../../resources/cyc-logo.png";
 
 function Header() {
@@ -6,7 +7,10 @@ function Header() {
   }
 
   return (
-    <header className="fixed top-0 w-full bg-gray z-40 flex justify-center p-8 border-b-2 shadow-md cursor-pointer">
+    <header
+      data-testid="header"
+      className="fixed top-0 w-full bg-gray z-40 flex justify-center p-8 border-b-2 shadow-md cursor-pointer"
+    >
       <img
         src={cycImage}
         alt="cyc logo"

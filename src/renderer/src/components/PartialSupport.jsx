@@ -1,3 +1,5 @@
+import React from "react";
+
 function PartialSupport({
   cssProperty,
   userSelections,
@@ -102,7 +104,10 @@ function PartialSupport({
   }
 
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div
+      data-testid="partial-support-component"
+      className="flex flex-col justify-center items-center"
+    >
       <h3 className="text-3xl font-bold">
         <span className="text-yellow">{cssProperty}</span> is partially
         supported.

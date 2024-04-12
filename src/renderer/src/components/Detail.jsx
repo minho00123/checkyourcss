@@ -1,3 +1,4 @@
+import React from "react";
 import NotSupport from "./NotSupport";
 import PartialSupport from "./PartialSupport";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
