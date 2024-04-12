@@ -1,3 +1,4 @@
+import React from "react";
 import bcd from "@mdn/browser-compat-data";
 
 function NotSupport({
