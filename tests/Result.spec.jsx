@@ -98,6 +98,7 @@ describe("Result Component", () => {
       />,
     );
     const notSupportedElements = screen.getAllByText(/Not Supported/i);
+
     expect(notSupportedElements.length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Partial Supported/i).length).toBeGreaterThan(0);
   });
