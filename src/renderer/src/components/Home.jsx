@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import bcd from "@mdn/browser-compat-data";
 import Result from "./Result";
@@ -238,7 +239,10 @@ function Home() {
   return (
     <>
       {!cssCompatibilityResult ? (
-        <main className="flex justify-center items-center flex-col h-screen">
+        <main
+          data-testid="home"
+          className="flex justify-center items-center flex-col h-screen"
+        >
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
